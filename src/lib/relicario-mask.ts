@@ -14,7 +14,8 @@ type HoleMask = {
 let holePromise: Promise<HoleMask> | null = null;
 
 async function loadHole(): Promise<HoleMask> {
-  const file = path.join(process.cwd(), RELICARIO.file);
+  // Literales: si el path es dinámico, Turbopack traza todo el repo en el server bundle.
+  const file = path.join(process.cwd(), "public", "reli.png");
   const { data, info } = await sharp(await readFile(file))
     .ensureAlpha()
     .raw()

@@ -987,9 +987,10 @@ function VolumeChart({
             fill="transparent"
             className="cursor-pointer"
             onClick={() => onPick(row.ventasDia)}
-            title={`${row.ventasDia} ventas/día · ingreso ${clp(row.ingresoMes)} · publicidad ${clp(row.pautaMes)} · utilidad ${clp(row.utilidadMes)}`}
             aria-label={`${row.ventasDia} ventas al día, ingreso ${clp(row.ingresoMes)}, publicidad ${clp(row.pautaMes)}, utilidad ${clp(row.utilidadMes)}`}
-          />
+          >
+            <title>{`${row.ventasDia} ventas/día · ingreso ${clp(row.ingresoMes)} · publicidad ${clp(row.pautaMes)} · utilidad ${clp(row.utilidadMes)}`}</title>
+          </rect>
         ))}
       </svg>
     </div>
