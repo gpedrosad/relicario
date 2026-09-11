@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useProjectLocal } from "@/components/ProjectLocalProvider";
 import {
   CONVERSION_PRESETS,
   CPA_PRESETS,
   CPC_PRESETS,
-  COSTOS_DEFAULT,
   DIAS_MES,
   IVA_PCT,
   HEALTH_LABEL,
@@ -115,7 +115,7 @@ const LINEAS_TABLA = [
 ] as const;
 
 export default function CostosDashboard() {
-  const [input, setInput] = useState<CostosInput>(COSTOS_DEFAULT);
+  const { costos: input, setCostos: setInput, resetCostos } = useProjectLocal();
   const analisis = useMemo(() => analizarCostos(input), [input]);
   const cpaRows = useMemo(
     () =>
@@ -173,7 +173,7 @@ export default function CostosDashboard() {
           </div>
           <button
             type="button"
-            onClick={() => setInput(COSTOS_DEFAULT)}
+            onClick={resetCostos}
             className="self-start rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-medium hover:border-zinc-400"
           >
             Volver a supuestos

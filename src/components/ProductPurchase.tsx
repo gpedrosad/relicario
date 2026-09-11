@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useProjectLocal } from "@/components/ProjectLocalProvider";
 import {
   ADDONS,
   RELICARIO_PRECIO,
@@ -13,8 +14,9 @@ import {
 } from "@/lib/addons";
 
 export default function ProductPurchase() {
-  const [selected, setSelected] = useState<string[]>([]);
-  const [versionId, setVersionId] = useState(VERSIONES[0].id);
+  const { tienda, setTienda } = useProjectLocal();
+  const selected = tienda.selected;
+  const versionId = tienda.versionId;
   const version = versionById(versionId);
   const extras = useMemo(() => addonsTotal(selected), [selected]);
   const total = RELICARIO_PRECIO + extras;
@@ -23,7 +25,10 @@ export default function ProductPurchase() {
   );
 
   const onToggle = (id: string) => {
-    setSelected((current) => toggleAddon(current, id));
+    setTienda((current) => ({
+      ...current,
+      selected: toggleAddon(current.selected, id),
+    }));
   };
 
   return (
@@ -75,7 +80,9 @@ export default function ProductPurchase() {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setVersionId(item.id)}
+                  onClick={() =>
+                    setTienda((current) => ({ ...current, versionId: item.id }))
+                  }
                   className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                     active
                       ? "bg-zinc-900 text-white"
