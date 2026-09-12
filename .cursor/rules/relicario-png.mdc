@@ -1,0 +1,16 @@
+---
+description: Especificaciones de reli.png para componer la foto en el relicario
+alwaysApply: true
+---
+
+# Relicario PNG
+
+Fuente de verdad: `src/lib/relicario-spec.ts` y `docs/relicario-png.md`.
+
+- `bria/remove-background` solo para ubicar la silueta y estimar la cabeza. El encuadre es un retrato canónico del corazón (coronilla bajo la hendidura).
+- Encajar a las personas enteras en la zona ancha. No recortar caras ni el grupo.
+- `flux-fill-pro` llena el corazón extendiendo solo el fondo de ESTA foto. Cara y pose se quedan en píxeles originales.
+- No inventar otras caras ni un segundo retrato.
+- Componer sobre `/reli.png`. La imagen ya encuadrada se pega en el bbox del hueco.
+- Seed flood-fill `(0.727, 0.605)`, `alpha < 16`. Clip al hueco, `reli.png` encima, fondo `#ffffff`.
+- No usar `imagenrelicario.png` para el composite: no tiene alpha.

@@ -50,6 +50,8 @@ export const RELICARIO = {
 export const RELICARIO_REPLICATE = {
   cutoutModel: "bria/remove-background",
   fillModel: "black-forest-labs/flux-fill-pro",
+  validationModel: "ultralytics/yolov8s-worldv2:96a016a98290d3ff1f3ed8942c916379701c84da9b6d5b19a107b1f86cdc97f5",
+  maxFillAttempts: 2,
   /**
    * Retrato canónico para CUALQUIER foto. Fracciones del canvas de salida.
    * Medido en reli.png: el centro del hueco no existe hasta y≈428 (17% del alto).
@@ -60,6 +62,11 @@ export const RELICARIO_REPLICATE = {
     dip: 0.17,
     /** Margen visible entre la coronilla y la hendidura. */
     headTop: 0.27,
+    /** Zona candidata para el borde inferior del grupo completo. */
+    minSubjectBottom: 0.5,
+    maxSubjectBottom: 0.9,
+    /** Distancia mínima respecto al metal, sobre el lado menor del insert. */
+    edgeMargin: 0.035,
     /** Ojos / centro de cara (bajo la hendidura, en la parte ancha). */
     faceCenterY: 0.43,
     /** Ojos relativos a la caja de la cabeza. */
@@ -69,7 +76,7 @@ export const RELICARIO_REPLICATE = {
     /** Ancho de referencia cuando no se proporciona la máscara medida. */
     maxHeadWidth: 0.7,
   },
-  /** Instrucciones dinámicas con medidas reales: relicario-prompt.ts. */
+  /** Reglas de generación: relicario-prompt.ts. Zonas: docs/relicario-areas.md. */
 } as const;
 
 export const RELICARIO_HERO = {

@@ -48,11 +48,12 @@ test("el prompt distingue autocompletado de pelo y fondo sin inducir un diagrama
   const { buildRelicarioPrompt } = load("@/lib/relicario-prompt");
   const prompt = buildRelicarioPrompt({ completeTop: true });
   assert.match(prompt, /preserve the black region/);
-  assert.match(prompt, /missing top/);
+  assert.match(prompt, /Never invent a missing face/);
+  assert.match(prompt, /unoccupied background/);
   assert.doesNotMatch(prompt, /x=|y=|locket|heart-shaped/);
   const background = buildRelicarioPrompt({ completeTop: false });
   assert.match(background, /heads are already complete/);
-  assert.doesNotMatch(background, /complete the missing top/);
+  assert.doesNotMatch(background, /continue only that same hair/);
 });
 
 test("las personas entran enteras en la zona segura, sin recorte", async () => {
@@ -83,6 +84,7 @@ test("la IA pinta fuera de la foto y se restauran los píxeles originales", asyn
   let fillCalls = 0;
   class FakeReplicate {
     async run(_model, { input }) {
+      if (input.query) return { detections: [] };
       if (input.preserve_alpha) throw new Error("Detección no disponible en esta prueba");
       fillCalls += 1;
       const generated = await sharp({
@@ -210,3 +212,59 @@ test("la unión suaviza el fondo sin volver transparente ni alterar a la persona
     }
   }
 });
+
+test("la validación distingue caras existentes, contexto y gente inventada", () => {
+  const { addedSubjects } = modules()("@/lib/relicario-validation");
+  const original = { x: 200, y: 250, w: 300, h: 400 };
+  const added = addedSubjects({ detections: [
+    { label: "face", confidence: 0.9, bbox: [250, 300, 340, 410] },
+    { label: "person", confidence: 0.9, bbox: [200, 200, 510, 850] },
+    { label: "person", confidence: 0.8, bbox: [650, 300, 800, 600] },
+    { label: "face", confidence: 0.8, bbox: [220, 160, 290, 270] },
+    { label: "tree", confidence: 0.9, bbox: [650, 300, 800, 600] },
+  ] }, original);
+  assert.equal(added.length, 2);
+  assert.deepEqual(added.map(item => item.label), ["person", "face"]);
+  assert.deepEqual(addedSubjects({ detections: [] }, original), []);
+  assert.throws(() => addedSubjects({ error: "verification unavailable" }, original));
+  assert.throws(() => addedSubjects({ detections: [{ label: "face", confidence: 1, bbox: [0, 1] }] }, original));
+});
+
+for (const keepsInventing of [false, true]) {
+  test(keepsInventing ? "no entrega una imagen si ambos rellenos inventan caras" : "reintenta el relleno si la primera versión inventa una cara", async () => {
+    const previous = process.env.REPLICATE_API_TOKEN;
+    process.env.REPLICATE_API_TOKEN = "test-only";
+    let fills = 0;
+    let checks = 0;
+    const source = await sharp({ create: {
+      width: 200, height: 300, channels: 4, background: "#2266aa",
+    } }).png().toBuffer();
+    class FakeReplicate {
+      async run(_model, { input }) {
+        if (input.preserve_alpha) return { blob: async () => new Blob([source], { type: "image/png" }) };
+        if (input.query) {
+          checks++;
+          assert.equal(input.show_visualisation, false);
+          return { detections: keepsInventing || checks === 1
+            ? [{ label: "face", confidence: 0.8, bbox: [100, 220, 180, 300] }]
+            : [] };
+        }
+        fills++;
+        const generated = await sharp({ create: {
+          width: 1102, height: 984, channels: 3, background: "#ff0000",
+        } }).png().toBuffer();
+        return { blob: async () => new Blob([generated], { type: "image/png" }) };
+      }
+    }
+    try {
+      const { enhancePortrait } = modules({ replicate: FakeReplicate })("@/lib/replicate");
+      if (keepsInventing) await assert.rejects(enhancePortrait(source), /agregó una persona o cara/);
+      else assert.equal((await enhancePortrait(source)).contentType, "image/png");
+      assert.equal(fills, 2);
+      assert.equal(checks, 2);
+    } finally {
+      if (previous === undefined) delete process.env.REPLICATE_API_TOKEN;
+      else process.env.REPLICATE_API_TOKEN = previous;
+    }
+  });
+}

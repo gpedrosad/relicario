@@ -2,6 +2,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 Especificaciones del PNG del relicario (tamaños, hueco y composite): [docs/relicario-png.md](docs/relicario-png.md).
 
+Memoria del proyecto (decisiones, hipótesis, lecciones): [docs/learn/README.md](docs/learn/README.md).
+
 Copia `.env.example` a `.env.local` y pon tu `REPLICATE_API_TOKEN` (https://replicate.com/account/api-tokens). Reinicia `npm run dev` después.
 
 ## Getting Started

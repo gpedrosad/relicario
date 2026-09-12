@@ -1,6 +1,6 @@
 import { enhancePortrait } from "@/lib/replicate";
 
-export const maxDuration = 90;
+export const maxDuration = 180;
 
 const MAX_BYTES = 8 * 1024 * 1024;
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);

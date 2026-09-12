@@ -30,6 +30,7 @@ import {
   type Health,
   type LineaCosto,
 } from "@/lib/costos";
+import { armarPedidoChina, PEDIDO_CHINA_PIEZAS } from "@/lib/pedido-china";
 
 const HEALTH_CLASS: Record<Health, string> = {
   excelente: "bg-emerald-50 text-emerald-800",
@@ -134,6 +135,7 @@ export default function CostosDashboard() {
     [input],
   );
   const volumenRows = useMemo(() => serieVolumen(input), [input]);
+  const pedido = useMemo(() => armarPedidoChina(PEDIDO_CHINA_PIEZAS), []);
 
   const set = <K extends keyof CostosInput>(key: K, value: CostosInput[K]) => {
     setInput((current) => ({ ...current, [key]: value }));
@@ -150,6 +152,9 @@ export default function CostosDashboard() {
           <nav className="flex items-center gap-4 text-sm text-zinc-600">
             <a href="/" className="hover:text-zinc-900">
               Tienda
+            </a>
+            <a href="#pedido" className="hover:text-zinc-900">
+              Pedido
             </a>
             <span className="font-medium text-zinc-900">Costos</span>
           </nav>
@@ -186,6 +191,72 @@ export default function CostosDashboard() {
           <div className="flex flex-wrap items-center gap-3">
             <HealthBadge health={analisis.saludModelo} onTone />
             <p className="text-sm font-semibold">{analisis.lecturaModelo}</p>
+          </div>
+        </section>
+
+        <section
+          id="pedido"
+          className="rounded-2xl border border-zinc-200 bg-white p-5"
+        >
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-base font-semibold">Primer pedido a China</h2>
+              <p className="mt-1 max-w-2xl text-sm text-zinc-500">
+                {pedido.piezas} relicarios por avión (~10 días). Solo viaja lo
+                que no se imprime ni se despacha acá. Attach de test, no de
+                escala.
+              </p>
+            </div>
+            <p className="text-sm text-zinc-500">
+              {pedido.totalUnidadesChina} unidades en el avión
+            </p>
+          </div>
+
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full min-w-[36rem] text-left text-sm">
+              <thead className="text-xs uppercase tracking-wide text-zinc-500">
+                <tr>
+                  <th className="pb-2 font-medium">Ítem</th>
+                  <th className="pb-2 font-medium">Attach</th>
+                  <th className="pb-2 text-right font-medium">Pedir</th>
+                  <th className="pb-2 font-medium">Origen</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {pedido.china.map((row) => (
+                  <tr key={row.id}>
+                    <td className="py-2.5">
+                      <p className="font-medium">{row.name}</p>
+                      <p className="text-xs text-zinc-500">{row.note}</p>
+                    </td>
+                    <td className="py-2.5 text-zinc-600">{row.attachPct}%</td>
+                    <td className="py-2.5 text-right text-lg font-bold tabular-nums">
+                      {row.qty}
+                    </td>
+                    <td className="py-2.5">
+                      <span className="rounded-full bg-zinc-900 px-2 py-0.5 text-xs font-medium text-white">
+                        China
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {pedido.chile.map((row) => (
+                  <tr key={row.id} className="text-zinc-500">
+                    <td className="py-2.5">
+                      <p className="font-medium text-zinc-700">{row.name}</p>
+                      <p className="text-xs">{row.note}</p>
+                    </td>
+                    <td className="py-2.5">{row.attachPct}%</td>
+                    <td className="py-2.5 text-right tabular-nums">0</td>
+                    <td className="py-2.5">
+                      <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
+                        Chile
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
 

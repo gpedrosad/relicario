@@ -9,6 +9,7 @@ import {
 } from "@/lib/relicario-frame";
 import { placePhotoAndExtend, photoOutpaintInput } from "@/lib/relicario-background";
 import { buildRelicarioPrompt } from "@/lib/relicario-prompt";
+import { addedSubjects, normalizeDetections } from "@/lib/relicario-validation";
 import {
   flattenOutsideHeart,
   heartGenerateMask,
@@ -184,36 +185,48 @@ export async function enhancePortrait(image: Buffer) {
     const fillModel =
       process.env.REPLICATE_FILL_MODEL?.trim() ||
       RELICARIO_REPLICATE.fillModel;
-    const filled = await replicate.run(fillModel as `${string}/${string}`, {
-      input: {
-        prompt,
-        image: dataUri(fill.image, "image/png"),
-        mask: dataUri(fill.mask, "image/png"),
-        prompt_upsampling: false,
-        output_format: "png",
-      },
-    });
-    const out = await outputToImage(filled);
-    portrait = await sharp(out.bytes)
-      .resize(targetW, targetH, { fit: "fill" })
-      .png()
-      .toBuffer();
-
     const original = await photoLayer(
-      image,
-      originalImageSize,
-      originalImageLocation,
-      targetW,
-      targetH,
+      image, originalImageSize, originalImageLocation, targetW, targetH,
     );
-    if (original) {
-      portrait = await sharp(portrait)
-        .composite([
-          { input: original.overlay, left: original.left, top: original.top },
-        ])
+    for (let attempt = 0; attempt < RELICARIO_REPLICATE.maxFillAttempts; attempt++) {
+      const filled = await replicate.run(fillModel as `${string}/${string}`, {
+        input: {
+          prompt: attempt === 0 ? prompt : `${prompt}\n\nThe previous extension introduced an unwanted human figure. Generate empty environmental context only in the new surroundings. Only the people in the protected original photograph may remain.`,
+          image: dataUri(fill.image, "image/png"),
+          mask: dataUri(fill.mask, "image/png"),
+          prompt_upsampling: false,
+          output_format: "png",
+        },
+      });
+      const out = await outputToImage(filled);
+      portrait = await sharp(out.bytes)
+        .resize(targetW, targetH, { fit: "fill" })
         .png()
         .toBuffer();
+
+      if (original) {
+        portrait = await sharp(portrait)
+          .composite([
+            { input: original.overlay, left: original.left, top: original.top },
+          ])
+          .png()
+          .toBuffer();
+      }
+      // Verificar lo que verá el cliente, con el original repuesto y el hueco aplicado.
+      const candidate = await flattenOutsideHeart(portrait, targetW, targetH);
+      const verification = await replicate.run(RELICARIO_REPLICATE.validationModel, {
+        input: {
+          image: dataUri(candidate, "image/png"), class_names: "person, human face",
+          conf: 0.25, imgsz: 640, return_json: true,
+        },
+      });
+      const unexpected = addedSubjects(normalizeDetections(verification), {
+        x: originalImageLocation[0], y: originalImageLocation[1],
+        w: originalImageSize[0], h: originalImageSize[1],
+      });
+      if (unexpected.length === 0) return { bytes: candidate, contentType: "image/png" };
     }
+    throw new Error("El relleno agregó una persona o cara que no estaba en tu foto. No mostramos ese resultado. Volvé a intentarlo.");
   }
 
   const bytes = await flattenOutsideHeart(portrait, targetW, targetH);

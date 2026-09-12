@@ -4,6 +4,8 @@ Medidas tomadas del archivo real en `public/`. Origen de coordenadas: esquina su
 
 La fuente de verdad en código es `src/lib/relicario-spec.ts`.
 
+Las posiciones permitidas para las personas, con medidas y esquema, están en [Áreas de personas y generación de contexto](relicario-areas.md).
+
 ## Asset maestro: `reli.png`
 
 Usar **solo este archivo** para componer la foto del usuario.
@@ -58,6 +60,8 @@ Alpha global de `reli.png`: ~63% transparente (fondo + hueco), ~36% opaco (metal
 6. `destination-in` con la máscara del corazón.
 7. `source-over` de `reli.png`.
 8. `destination-over` relleno **blanco `#ffffff`** (fuera del relicario, no dentro del hueco).
+
+Antes de entregar el insert, un detector revisa si aparecen personas o caras fuera de la foto original. Si las encuentra, se regenera una vez; un segundo resultado con detecciones nuevas se descarta. Ver los umbrales y límites en [Áreas de personas](relicario-areas.md).
 
 Exportar `image/png`. Nombre de descarga: `relicario-con-mi-foto.png`.
 

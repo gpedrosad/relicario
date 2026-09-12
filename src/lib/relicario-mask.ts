@@ -100,12 +100,12 @@ export async function heartKeepMask(targetW: number, targetH: number) {
 export async function heartSafeArea(targetW: number, targetH: number, subject?: Box): Promise<Box> {
   const { data } = await heartOnCanvas(targetW, targetH);
   const heart = RELICARIO_REPLICATE.heart;
-  const margin = Math.ceil(Math.min(targetW, targetH) * 0.035);
+  const margin = Math.ceil(Math.min(targetW, targetH) * heart.edgeMargin);
   const center = Math.floor(targetW / 2);
   let dip = 0;
   while (dip < targetH && !data[dip * targetW + center]) dip++;
   const top = Math.max(Math.ceil(targetH * heart.headTop), dip + margin);
-  const bottom = Math.floor(targetH * (subject ? 0.9 : heart.chinMax));
+  const bottom = Math.floor(targetH * (subject ? heart.maxSubjectBottom : heart.chinMax));
   let left = 0;
   let right = targetW - 1;
   let best: Box | null = null;
@@ -122,7 +122,7 @@ export async function heartSafeArea(targetW: number, targetH: number, subject?: 
     left = Math.max(left, rowLeft + margin);
     right = Math.min(right, rowRight - margin);
     const candidateBottom = y - margin;
-    if (subject && candidateBottom >= targetH * 0.5 && right > left) {
+    if (subject && candidateBottom >= targetH * heart.minSubjectBottom && right > left) {
       const candidate = { x: left, y: top, w: right - left, h: candidateBottom - top };
       const scale = Math.min(candidate.w / Math.max(subject.w, 1), candidate.h / Math.max(subject.h, 1));
       if (scale > bestScale) {

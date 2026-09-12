@@ -1,0 +1,15 @@
+---
+description: Leer y actualizar docs/learn en cada iteración
+alwaysApply: true
+---
+
+# Self-learn
+
+Índice: `docs/learn/README.md`. Specs no se duplican: PNG → `relicario-spec.ts`; plata → `costos.ts`; ley → `docs/ley-21719-relicario.md`.
+
+- Antes de tocar producto, costos, legal, deploy o el simulador: leer `docs/learn/mapa.md` y el MD del tema (`decisiones`, `lecciones`, `hipotesis`).
+- El usuario cierra un criterio → fila en `decisiones.md` + entrada arriba en `log.md`.
+- Sale un supuesto → `hipotesis.md`. Se confirma o muere → `lecciones.md` o `decisiones.md` y se actualiza el estado.
+- Se rompe un build, deploy o flujo → `lecciones.md` + `log.md` el mismo día.
+- Se responde un hueco de `preguntas.md` → se mueve y se borra de ahí.
+- No inventar métricas. Fecha `YYYY-MM-DD`. Español. Linkear specs, no copiarlas.
