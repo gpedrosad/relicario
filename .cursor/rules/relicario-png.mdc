@@ -9,6 +9,7 @@ Fuente de verdad: `src/lib/relicario-spec.ts` y `docs/relicario-png.md`.
 
 - Primero detectar caras (Bria solo para ubicar). El recorte sigue el ratio del hueco y no deja las caras por encima de `faceScale`.
 - Si no hay caras, se usa la foto completa. Cover del hueco: fondo original, nítido. Sin blur ni viñeta.
+- Después del encuadre el usuario puede arrastrar y escalar la foto; el clip al hueco se mantiene.
 - Clip al hueco de `reli.png`. Nada sobre el oro. Fuera del relicario: blanco.
 - Componer sobre `/reli.png`. La imagen ya encuadrada se pega en el bbox del hueco.
 - Seed flood-fill `(0.727, 0.605)`, `alpha < 16`. Clip al hueco, `reli.png` encima. Hueco sin foto: marfil `#F3EDE4`. Fuera del relicario: `#ffffff`.

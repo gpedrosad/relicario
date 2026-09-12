@@ -4,6 +4,7 @@ Más nuevo arriba. Una entrada por hecho, no un diario.
 
 ## 2026-09-12
 
+- Preview: después del encuadre se puede arrastrar y hacer zoom (+/−, rueda, pellizco).
 - Encuadre: las caras detectadas no superan ~26–34% del hueco. Se dejó el zoom 1:1 apretado.
 - Hueco: cover de la foto encuadrada, fondo tal cual. Se apagaron blur, viñeta y escena expandida.
 - Viñeta ultra suave: núcleo grande, curva t³, piso de alpha; el corte casi no se ve.

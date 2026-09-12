@@ -54,7 +54,7 @@ Alpha global de `reli.png`: ~63% transparente (fondo + hueco), ~36% opaco (metal
 
 1. Si hay caras, se recorta al **ratio del hueco** alrededor del grupo. Las caras no superan ~34% del alto. Si no hay, se usa la foto completa.
 2. Esa foto se pone en **cover** del hueco: nítida, con su fondo original. Sin blur ni viñeta.
-3. Canvas **1102×984** (2× el hueco). Clip al hueco. `reli.png` encima. Fuera del relicario: blanco.
+3. En el preview se puede **arrastrar y escalar** sobre ese encuadre. Clip al hueco. `reli.png` encima. Fuera del relicario: blanco.
 4. Sin IA generativa para rellenar.
 
 Exportar `image/png`. Nombre de descarga: `relicario-con-mi-foto.png`.

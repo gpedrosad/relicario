@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import RelicarioPhotoEditor, {
+  exportRelicarioEdit,
+} from "@/components/RelicarioPhotoEditor";
 import { RELICARIO, RELICARIO_HERO } from "@/lib/relicario-spec";
+import type { PhotoBox, PhotoPan } from "@/lib/relicario-pan";
 
 const LOADING_STAGES = [
   "Analizando foto...",
@@ -116,24 +120,6 @@ async function loadOrientedBitmap(file: File) {
   }
 }
 
-function pinToHole(
-  imgW: number,
-  imgH: number,
-  hole: { minX: number; minY: number; maxX: number; maxY: number },
-) {
-  const holeW = hole.maxX - hole.minX + 1;
-  const holeH = hole.maxY - hole.minY + 1;
-  const scale = Math.max(holeW / imgW, holeH / imgH) * RELICARIO.coverScale;
-  const dw = imgW * scale;
-  const dh = imgH * scale;
-  return {
-    dx: hole.minX + (holeW - dw) / 2,
-    dy: hole.minY + (holeH - dh) / 2,
-    dw,
-    dh,
-  };
-}
-
 async function prepareUpload(file: File) {
   const bitmap = await loadOrientedBitmap(file);
   const maxSide = 1280;
@@ -172,9 +158,8 @@ function fileFromBase64(base64: string, type: string, name: string) {
 }
 
 async function frameOnServer(file: File, debug: boolean) {
-  const prepared = await prepareUpload(file);
   const body = new FormData();
-  body.append("image", prepared);
+  body.append("image", file);
   if (debug) body.append("debug", "1");
 
   const response = await fetch("/api/relicario/enhance", {
@@ -182,70 +167,22 @@ async function frameOnServer(file: File, debug: boolean) {
     body,
   });
 
+  const payload = (await response.json().catch(() => null)) as {
+    error?: string;
+    crop?: PhotoBox | null;
+    width?: number;
+    height?: number;
+    debug?: DebugInfo | null;
+  } | null;
+
   if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as {
-      error?: string;
-    } | null;
     throw new Error(payload?.error ?? "No se pudo encuadrar la foto");
   }
 
-  const contentType = response.headers.get("content-type") ?? "";
-  if (contentType.includes("application/json")) {
-    const payload = (await response.json()) as {
-      image: string;
-      contentType?: string;
-      debug: DebugInfo;
-    };
-    return {
-      file: fileFromBase64(payload.image, payload.contentType || "image/png", "encuadre.png"),
-      debug: payload.debug,
-    };
-  }
-
-  const blob = await response.blob();
   return {
-    file: new File([blob], "encuadre.png", {
-      type: blob.type || "image/png",
-    }),
-    debug: null,
+    crop: payload?.crop ?? null,
+    debug: payload?.debug ?? null,
   };
-}
-
-async function composePhoto(file: File) {
-  const [base, user, hole] = await Promise.all([
-    loadImage(RELICARIO.src),
-    loadOrientedBitmap(file),
-    getHoleMask(),
-  ]);
-
-  const width = base.naturalWidth;
-  const height = base.naturalHeight;
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("No se pudo generar el resultado");
-
-  const { dx, dy, dw, dh } = pinToHole(user.width, user.height, hole);
-
-  ctx.drawImage(user, dx, dy, dw, dh);
-  user.close();
-  ctx.globalCompositeOperation = "destination-in";
-  ctx.drawImage(hole.canvas, 0, 0);
-  ctx.globalCompositeOperation = "source-over";
-  ctx.drawImage(base, 0, 0);
-  ctx.globalCompositeOperation = "destination-over";
-  ctx.fillStyle = RELICARIO.background;
-  ctx.fillRect(0, 0, width, height);
-
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
-      (result) => (result ? resolve(result) : reject(new Error("No se pudo exportar"))),
-      RELICARIO.exportMime,
-    );
-  });
-
-  return URL.createObjectURL(blob);
 }
 
 export default function RelicarioPreview() {
@@ -257,7 +194,27 @@ export default function RelicarioPreview() {
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
   const [debugOverlay, setDebugOverlay] = useState<string | null>(null);
+  const [photo, setPhoto] = useState<ImageBitmap | null>(null);
+  const [baseImage, setBaseImage] = useState<HTMLImageElement | null>(null);
+  const [hole, setHole] = useState<HoleMask | null>(null);
+  const [crop, setCrop] = useState<PhotoBox | null>(null);
+  const [scale, setScale] = useState(1);
+  const [pan, setPan] = useState<PhotoPan>({ x: 0, y: 0 });
   const inputRef = useRef<HTMLInputElement>(null);
+  const exportTimer = useRef<number>(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([loadImage(RELICARIO.src), getHoleMask()]).then(([image, mask]) => {
+      if (!cancelled) {
+        setBaseImage(image);
+        setHole(mask);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!loading) return;
@@ -268,6 +225,20 @@ export default function RelicarioPreview() {
     }, 2500);
     return () => window.clearInterval(timer);
   }, [loading]);
+
+  useEffect(() => {
+    if (!photo || !baseImage || !hole) return;
+    window.clearTimeout(exportTimer.current);
+    exportTimer.current = window.setTimeout(() => {
+      exportRelicarioEdit(photo, baseImage, hole, crop, scale, pan).then((url) => {
+        setPreview((current) => {
+          if (current && current !== result) URL.revokeObjectURL(current);
+          return url;
+        });
+      });
+    }, 60);
+    return () => window.clearTimeout(exportTimer.current);
+  }, [photo, baseImage, hole, crop, scale, pan, result]);
 
   const handleFile = async (file: File | undefined) => {
     if (!file) return;
@@ -286,12 +257,16 @@ export default function RelicarioPreview() {
     });
 
     try {
-      const framed = await frameOnServer(file, isDebugEnabled());
-      const composed = await composePhoto(framed.file);
-      setPreview((current) => {
-        if (current && current !== result) URL.revokeObjectURL(current);
-        return composed;
+      const prepared = await prepareUpload(file);
+      const framed = await frameOnServer(prepared, isDebugEnabled());
+      const bitmap = await loadOrientedBitmap(prepared);
+      setPhoto((current) => {
+        current?.close();
+        return bitmap;
       });
+      setCrop(framed.crop);
+      setScale(1);
+      setPan({ x: 0, y: 0 });
       setDebugInfo(framed.debug);
       if (framed.debug?.overlay) {
         const overlayFile = fileFromBase64(
@@ -311,11 +286,22 @@ export default function RelicarioPreview() {
     }
   };
 
-  const apply = () => {
-    if (!preview) return;
+  const composeCurrent = async () => {
+    if (!photo || !baseImage || !hole) return preview;
+    const url = await exportRelicarioEdit(photo, baseImage, hole, crop, scale, pan);
+    setPreview((current) => {
+      if (current && current !== result && current !== url) URL.revokeObjectURL(current);
+      return url;
+    });
+    return url;
+  };
+
+  const apply = async () => {
+    const src = (await composeCurrent()) ?? preview;
+    if (!src) return;
     setResult((current) => {
-      if (current && current !== preview) URL.revokeObjectURL(current);
-      return preview;
+      if (current && current !== src) URL.revokeObjectURL(current);
+      return src;
     });
     setOpen(false);
   };
@@ -330,8 +316,8 @@ export default function RelicarioPreview() {
     });
   };
 
-  const downloadResult = () => {
-    const src = preview ?? result;
+  const downloadResult = async () => {
+    const src = (await composeCurrent()) ?? preview ?? result;
     if (!src) return;
     const link = document.createElement("a");
     link.href = src;
@@ -384,6 +370,11 @@ export default function RelicarioPreview() {
                 URL.revokeObjectURL(result);
                 if (preview && preview !== result) URL.revokeObjectURL(preview);
                 if (debugOverlay) URL.revokeObjectURL(debugOverlay);
+                photo?.close();
+                setPhoto(null);
+                setCrop(null);
+                setScale(1);
+                setPan({ x: 0, y: 0 });
                 setResult(null);
                 setPreview(null);
                 setDebugInfo(null);
@@ -403,18 +394,18 @@ export default function RelicarioPreview() {
           onClick={close}
         >
           <div
-            className="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl bg-white p-6 shadow-xl"
+            className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-xl font-bold tracking-tight">
-              {preview ? "Tu relicario" : "Sube tu foto"}
+              {photo || preview ? "Tu relicario" : "Sube tu foto"}
             </h2>
             <p className="mt-1 text-sm text-zinc-500">
               {loading
                 ? LOADING_STAGES[loadingStage]
-                : preview
-                  ? "Así se ve tu foto dentro del relicario."
-                  : "Tu foto se ve completa en el corazón. El resto se rellena con un desenfoque de la misma imagen."}
+                : photo
+                  ? "Arrastra la foto para moverla. Usa + / − para agrandar o achicar."
+                  : "Sube una foto. La encuadramos en el corazón y después la puedes ajustar."}
             </p>
 
             <input
@@ -439,15 +430,20 @@ export default function RelicarioPreview() {
                   </p>
                 </div>
               </div>
-            ) : preview ? (
-              <div className="mt-4 min-h-0 flex-1 overflow-auto">
-                <div className="overflow-hidden rounded-xl bg-white">
-                  <img
-                    src={preview}
-                    alt="Resultado en el relicario"
-                    className="max-h-[50vh] w-full object-contain"
-                  />
-                </div>
+            ) : photo && baseImage && hole ? (
+              <div className="mt-0 min-h-0 flex-1 overflow-auto">
+                <RelicarioPhotoEditor
+                  photo={photo}
+                  base={baseImage}
+                  hole={hole}
+                  crop={crop}
+                  scale={scale}
+                  pan={pan}
+                  onTransform={({ scale: nextScale, pan: nextPan }) => {
+                    setScale(nextScale);
+                    setPan(nextPan);
+                  }}
+                />
                 {debugInfo && (
                   <div className="mt-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-xs text-zinc-600">
                     <p className="font-semibold text-zinc-800">
@@ -504,7 +500,7 @@ export default function RelicarioPreview() {
               >
                 Cancelar
               </button>
-              {(preview || error) && (
+              {(preview || photo || error) && (
                 <button
                   onClick={() => inputRef.current?.click()}
                   disabled={loading}

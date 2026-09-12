@@ -5,6 +5,7 @@ Cerradas. Para reabrir hace falta un dato nuevo (número, ley, o que se rompió 
 | Fecha | Decisión | Por qué | No hacer |
 | --- | --- | --- | --- |
 | 2026-09 | Composite solo sobre `/reli.png` | Tiene alpha. `imagenrelicario.png` es damero rasterizado | Usar el PNG legacy para pegar la foto |
+| 2026-09-12 | Tras el encuadre, la foto se arrastra y se escala en el cliente | El recorte automático no calza siempre | Volver a mandar la foto a Replicate para un nudge |
 | 2026-09-12 | Caras: tope de escala en el hueco (`faceScale`) | El zoom 1:1 las dejaba gigantes | Recortar justo al box de la cara |
 | 2026-09-12 | Hueco: foto encuadrada en cover, fondo original | Blur, viñeta y escena expandida se leían como recorte | Inventar o desenfocar el fondo del corazón |
 | 2026-09-12 | Preview: solo Bria. Sin Flux ni YOLO | Tardaba 3–5 llamadas. El hueco vacío es marfil | Volver a encadenar fill + detector en cada foto |

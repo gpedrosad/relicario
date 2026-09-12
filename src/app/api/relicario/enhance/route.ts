@@ -27,20 +27,17 @@ export async function POST(request: Request) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const result = await enhancePortrait(buffer, { debug });
+    const debugPayload = debug ? enhanceDebugPayload(result).debug : null;
 
-    if (debug) {
-      return Response.json(enhanceDebugPayload(result), {
-        headers: { "Cache-Control": "no-store" },
-      });
-    }
-
-    return new Response(new Uint8Array(result.bytes), {
-      headers: {
-        "Content-Type": result.contentType,
-        "Cache-Control": "no-store",
-        "X-Relicario-Decision": result.analysis.decision,
+    return Response.json(
+      {
+        crop: result.analysis.idealCrop,
+        width: result.analysis.width,
+        height: result.analysis.height,
+        debug: debugPayload,
       },
-    });
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "No se pudo generar el retrato";

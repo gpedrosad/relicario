@@ -10,7 +10,7 @@ Repo: [gpedrosad/relicario](https://github.com/gpedrosad/relicario). App: Next.j
 | --- | --- |
 | `/` | Tienda + `RelicarioPreview` + `ProductPurchase` |
 | `/costos` | Tablero. Noindex |
-| `POST /api/relicario/enhance` | Zoom a caras + cover del hueco + composite sobre `public/reli.png` |
+| `POST /api/relicario/enhance` | Detecta caras y devuelve el crop; el cliente compone y permite arrastrar/zoom |
 
 ## Piezas clave
 

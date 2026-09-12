@@ -276,6 +276,23 @@ test("la zona de cabezas respeta el hueco real del PNG y el margen bajo la hendi
 });
 
 
+test("el arrastre y el zoom parten del crop y no destapan el hueco", () => {
+  const { photoPlacement, clampPan, clampScale, PHOTO_EDIT } = modules()("@/lib/relicario-pan");
+  const hole = { minX: 100, minY: 50, maxX: 299, maxY: 249 };
+  const crop = { x: 20, y: 10, w: 80, h: 80 };
+  const placed = photoPlacement(200, 200, hole, crop, 1, { x: 0, y: 0 });
+  assert.ok(placed.s > 0);
+  assert.ok(placed.dw > hole.maxX - hole.minX);
+  const pushed = clampPan(200, 200, hole, crop, 1, { x: 4000, y: -4000 });
+  const cover = photoPlacement(200, 200, hole, crop, 1, pushed);
+  assert.ok(cover.dx <= hole.minX + 0.5);
+  assert.ok(cover.dy <= hole.minY + 0.5);
+  assert.ok(cover.dx + cover.dw >= hole.maxX + 0.5);
+  assert.ok(cover.dy + cover.dh >= hole.maxY + 0.5);
+  assert.equal(clampScale(0.1), PHOTO_EDIT.minScale);
+  assert.equal(clampScale(9), PHOTO_EDIT.maxScale);
+});
+
 test("el cover llena el canvas con la foto original", async () => {
   const { placePhotoCover } = modules()("@/lib/relicario-background");
   const photo = await sharp({
