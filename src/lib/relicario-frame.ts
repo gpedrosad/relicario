@@ -169,8 +169,7 @@ function fallbackLayout(origW: number, origH: number): PersonLayout {
 
 /**
  * Encaja a las personas enteras en la zona ancha del corazón.
- * La silueta detectada y el espacio reservado para completar pelo quedan dentro
- * del hueco; la escala es uniforme, sin deformar ni mover personas por separado.
+ * Escala uniforme: se agranda lo más posible sin recortar al grupo.
  */
 export function frameForHeart(
   origW: number,
@@ -247,7 +246,7 @@ export function frameForHeart(
   return { originalImageSize, originalImageLocation, coversCanvas, fit };
 }
 
-/** Incluye el espacio reservado para completar pelo por encima de la foto. */
+/** Caja que cubre persona y cabeza estimada. */
 export function subjectBounds(layout: PersonLayout): Box {
   const x = Math.min(layout.person.x, layout.head.x);
   const y = Math.min(layout.person.y, layout.head.y);

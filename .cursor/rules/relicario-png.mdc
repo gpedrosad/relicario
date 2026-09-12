@@ -7,10 +7,9 @@ alwaysApply: true
 
 Fuente de verdad: `src/lib/relicario-spec.ts` y `docs/relicario-png.md`.
 
-- `bria/remove-background` solo para ubicar la silueta y estimar la cabeza. El encuadre es un retrato canónico del corazón (coronilla bajo la hendidura).
-- Encajar a las personas enteras en la zona ancha. No recortar caras ni el grupo.
-- `flux-fill-pro` llena el corazón extendiendo solo el fondo de ESTA foto. Cara y pose se quedan en píxeles originales.
-- No inventar otras caras ni un segundo retrato.
+- Primero detectar caras (Bria solo para ubicar). El recorte sigue el ratio del hueco y no deja las caras por encima de `faceScale`.
+- Si no hay caras, se usa la foto completa. Cover del hueco: fondo original, nítido. Sin blur ni viñeta.
+- Clip al hueco de `reli.png`. Nada sobre el oro. Fuera del relicario: blanco.
 - Componer sobre `/reli.png`. La imagen ya encuadrada se pega en el bbox del hueco.
-- Seed flood-fill `(0.727, 0.605)`, `alpha < 16`. Clip al hueco, `reli.png` encima, fondo `#ffffff`.
+- Seed flood-fill `(0.727, 0.605)`, `alpha < 16`. Clip al hueco, `reli.png` encima. Hueco sin foto: marfil `#F3EDE4`. Fuera del relicario: `#ffffff`.
 - No usar `imagenrelicario.png` para el composite: no tiene alpha.

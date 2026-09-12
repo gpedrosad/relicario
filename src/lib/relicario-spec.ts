@@ -16,8 +16,11 @@ export const RELICARIO = {
   colorSpace: "srgb",
   hasAlpha: true,
   densityDpi: 72,
-  /** Fondo del PNG original: transparente (RGBA 0,0,0,0). El resultado se pinta blanco. */
+  /** Fuera del relicario, en el PNG final. */
   background: "#ffffff",
+  /** Hueco del corazón cuando la foto no cubre: marfil, papel de foto. */
+  paper: "#F3EDE4",
+  paperRgb: { r: 243, g: 237, b: 228 },
   exportMime: "image/png",
   /**
    * Hueco del corazón derecho, medido con flood-fill desde el seed.
@@ -39,19 +42,52 @@ export const RELICARIO = {
   },
   /** 1.0: el canvas ya tiene el ratio del hueco; un cover extra recorta la cabeza. */
   coverScale: 1,
-  /** El canvas usa el mismo ratio del hueco (551×492 ≈ 1.12). */
-  photoFit: {
-    aspectRatio: "1.12",
-    focalX: 0.5,
-    focalY: 0.5,
+  /**
+   * Tamaño de las caras detectadas dentro del recorte (y del hueco).
+   * Evita el zoom 1:1 que las deja gigantes.
+   */
+  faceScale: {
+    maxHeight: 0.34,
+    maxWidth: 0.56,
+    targetHeight: 0.26,
+    minHeight: 0.18,
+    centerY: 0.43,
+  },
+  /**
+   * Insert cuadrado de referencia (no se usa para colocar).
+   * El resto del corazón queda marfil. No es una máscara de corazón.
+   */
+  insert: {
+    x: 279,
+    y: 266,
+    width: 493,
+    height: 492,
+    pngX: 987,
+    pngY: 478,
+    pngWidth: 247,
+    pngHeight: 246,
+    /** Lado interno de la foto 1:1 antes de pegarla en el insert. */
+    outputSide: 512,
+  },
+  /**
+   * Márgenes sobre el bounding box de caras, como fracción del propio box.
+   * horizontal se aplica a ambos lados.
+   */
+  cropMargins: {
+    full: { horizontal: 0.65, top: 0.5, bottom: 1.0 },
+    min: { horizontal: 0.5, top: 0.4, bottom: 0.8 },
+    /** Personas lejos: menos aire, más zoom a las caras. */
+    close: { horizontal: 0.16, top: 0.2, bottom: 0.32 },
   },
 } as const;
 
 export const RELICARIO_REPLICATE = {
+  /** Silueta para ubicar cabezas. No regenera caras. */
   cutoutModel: "bria/remove-background",
-  fillModel: "black-forest-labs/flux-fill-pro",
-  validationModel: "ultralytics/yolov8s-worldv2:96a016a98290d3ff1f3ed8942c916379701c84da9b6d5b19a107b1f86cdc97f5",
-  maxFillAttempts: 2,
+  /** Solo si el crop 1:1 no cabe. Override: REPLICATE_OUTPAINT_MODEL. */
+  outpaintModel: "black-forest-labs/flux-fill-dev",
+  /** Vacío: upscale local (sharp). Override: REPLICATE_UPSCALE_MODEL. */
+  upscaleModel: "",
   /**
    * Retrato canónico para CUALQUIER foto. Fracciones del canvas de salida.
    * Medido en reli.png: el centro del hueco no existe hasta y≈428 (17% del alto).
@@ -76,7 +112,7 @@ export const RELICARIO_REPLICATE = {
     /** Ancho de referencia cuando no se proporciona la máscara medida. */
     maxHeadWidth: 0.7,
   },
-  /** Reglas de generación: relicario-prompt.ts. Zonas: docs/relicario-areas.md. */
+  /** Zonas: docs/relicario-areas.md. El hueco vacío es RELICARIO.paper. */
 } as const;
 
 export const RELICARIO_HERO = {

@@ -1,6 +1,6 @@
 # Áreas de personas y generación de contexto
 
-La foto se dimensiona primero. La IA completa el espacio restante con el entorno de esa foto; el marco de oro se superpone al final y nunca lo genera el modelo.
+La foto nítida se encaja en contain al mayor rectángulo del hueco. El resto del corazón lo llena un cover desenfocado de la misma foto. El marco de oro se superpone al final.
 
 ![Zonas de encuadre calculadas sobre el PNG real](relicario-zonas.png)
 
@@ -39,35 +39,17 @@ Estos ejemplos usan la **proporción de la silueta**, no la proporción del arch
 | Grupo horizontal 2:1 | 187–872 | 266–608 | 685 × 342 px |
 | Cuerpo entero 1:3 | 421–624 | 266–858 | 203 × 592 px |
 
-Si el original corta el pelo arriba, se conserva la reserva del 30% de la altura estimada de cabeza para continuar **sólo ese pelo**. No se permite inventar una cara que falta. Si falla la detección, se encaja la foto completa en la zona segura.
+La foto encuadrada se pone en cover del hueco, con su fondo original. Sin blur ni viñeta.
 
-## Qué puede generar la IA
+## Hueco sin foto
 
-La máscara de edición marca negro en toda la foto original y blanco fuera de ella. Las zonas blancas deben continuar la misma escena con fondo desocupado, respetando luz, perspectiva, color y profundidad de campo. Deben cubrir el lienzo hasta sus bordes; después se recorta con el corazón real para evitar halos o bandas vacías.
-
-No añadir transeúntes, multitudes, personas lejanas, siluetas, reflejos humanos, rostros en carteles, otras caras, retratos duplicados ni objetos decorativos. El pelo permitido arriba debe estar unido al de una persona existente y no modificar su cara. Las partes originales se vuelven a colocar opacas sobre el resultado, incluso si el modelo cambia zonas negras de la máscara.
-
-El prompt no contiene tablas de coordenadas ni pide dibujar un corazón: las pruebas visuales mostraron que eso podía inducir diagramas, rótulos y bordes. Las medidas se aplican mediante la máscara y el montaje, a nivel de píxel.
-
-## Revisión antes de mostrar el resultado
-
-Después de reponer la foto y aplicar el hueco, [YOLO-World de Ultralytics](https://replicate.com/ultralytics/yolov8s-worldv2) busca `person` y `human face`. Sólo se utiliza su salida JSON; la imagen anotada del detector nunca se muestra al cliente. Se comprueba qué proporción de cada detección pertenece a la foto original:
-
-- Cara: al menos 60% de su caja debe estar en el original.
-- Persona: al menos 15%, para admitir que el cuerpo existente continúe más allá del borde sin aceptar figuras nuevas aisladas.
-- Confianza mínima: 0,25. Una respuesta inválida o una falla del verificador no se interpreta como aprobación.
-
-Si aparece una detección nueva fuera del original, se regenera desde la foto original una vez. Si vuelve a ocurrir, no se entrega esa imagen al cliente. La detección es probabilística: puede omitir figuras pequeñas o producir falsos positivos; estos umbrales son un control adicional, no una garantía universal.
-
-Cada resultado generado usa una llamada de revisión. El máximo es dos rellenos y dos revisiones, además de la detección inicial. El endpoint dispone de 180 segundos; la duración efectiva depende de las colas del proveedor.
+No se genera fondo con IA. El lienzo se pinta marfil `#F3EDE4` y se pega la foto original. Una sola llamada: `bria/remove-background`, solo para encuadrar.
 
 ## Archivos y comprobaciones
 
-- `src/lib/relicario-spec.ts`: dimensiones, márgenes, modelos y máximo de intentos.
+- `src/lib/relicario-spec.ts`: dimensiones, márgenes y modelo de recorte.
 - `src/lib/relicario-mask.ts`: máscara real y selección de zona segura.
 - `src/lib/relicario-frame.ts`: escala y posición del conjunto.
-- `src/lib/relicario-prompt.ts`: instrucciones de contexto sin gente nueva.
-- `src/lib/relicario-validation.ts`: clasificación de detecciones nuevas.
-- `tests/relicario.test.mjs`: conservación del original, zonas de encuadre, reintento y rechazo de rellenos con caras nuevas.
+- `tests/relicario.test.mjs`: conservación del original, zonas de encuadre y marfil.
 
 El esquema está disponible en [SVG](relicario-zonas.svg). Al cambiar el PNG o los márgenes, volver a medir y actualizar estos ejemplos y el esquema.

@@ -8,8 +8,14 @@ Cosas ya pagadas. No volver a descubrirlas.
 - **2026-09 — `title` en `<rect>`.** React/TS no acepta `title` como prop de SVG. Tooltip = `<title>` hijo, o solo `aria-label`.
 - **2026-09 — Hydration del dashboard.** Un `<title>` en el SVG raíz y `Intl` no determinista rompían el primer paint. `clp` / `%` fijos, sin `title` de documento dentro del chart.
 
+- **2026-09-12 — Tres modelos por foto.** Flux + YOLO + reintento hacían el preview lento y caro. Con marfil en el hueco basta Bria para encuadrar.
+
+- **2026-09-12 — Foto sello.** El área segura partía de la hendidura (angosta) y nunca se ensanchaba. Sin Flux se veía un recuadro chico. El rectángulo tiene que vivir en la zona ancha.
+
 ## Simulador
 
+- Zoom 1:1 al box de las caras las deja gigantes en el corazón. Hay que topar el alto (~34%).
+- Blur / viñeta / escena expandida se leen como un recorte. El hueco pide la foto encuadrada, nítida, con su fondo.
 - Encajar **personas enteras** en la zona ancha. Recortar caras o el grupo se ve mal en el corazón.
 - `coverScale` extra recorta la coronilla contra la hendidura de oro. El canvas ya es el ratio del hueco.
 - No usar `imagenrelicario.png` para composite.

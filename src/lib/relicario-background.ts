@@ -1,12 +1,23 @@
 import sharp from "sharp";
+import { RELICARIO } from "@/lib/relicario-spec";
 
-function clamp(n: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, n));
+/** Foto encuadrada a cover del hueco: píxeles originales, sin blur ni viñeta. */
+export async function placePhotoCover(
+  image: Buffer,
+  targetW: number,
+  targetH: number,
+) {
+  return {
+    png: await sharp(image)
+      .resize(targetW, targetH, { fit: "cover", position: "centre" })
+      .png()
+      .toBuffer(),
+    dest: { x: 0, y: 0, w: targetW, h: targetH },
+  };
 }
 
 /**
- * Pega la foto y prolonga sus bordes (cielo, arena) para que la IA
- * no parta de un rectángulo blanco.
+ * Pega la foto sobre marfil. Lo que no cubre queda papel, no bordes estirados.
  */
 export async function placePhotoAndExtend(
   image: Buffer,
@@ -15,32 +26,45 @@ export async function placePhotoAndExtend(
   targetW: number,
   targetH: number,
 ) {
+  const paper = {
+    create: {
+      width: targetW,
+      height: targetH,
+      channels: 3 as const,
+      background: RELICARIO.paper,
+    },
+  };
   const resized = await sharp(image)
     .resize(size[0], size[1], { fit: "fill" })
-    .removeAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-  const src = resized.data;
-  const sw = resized.info.width;
-  const sh = resized.info.height;
-  const ch = resized.info.channels;
-  const out = Buffer.alloc(targetW * targetH * 3);
+    .png()
+    .toBuffer();
 
-  for (let y = 0; y < targetH; y++) {
-    for (let x = 0; x < targetW; x++) {
-      const sx = clamp(x - loc[0], 0, sw - 1);
-      const sy = clamp(y - loc[1], 0, sh - 1);
-      const si = (sy * sw + sx) * ch;
-      const di = (y * targetW + x) * 3;
-      out[di] = src[si];
-      out[di + 1] = src[si + 1];
-      out[di + 2] = src[si + 2];
-    }
+  const extractLeft = Math.max(0, -loc[0]);
+  const extractTop = Math.max(0, -loc[1]);
+  const extractW = Math.min(size[0] - extractLeft, targetW - Math.max(0, loc[0]));
+  const extractH = Math.min(size[1] - extractTop, targetH - Math.max(0, loc[1]));
+  if (extractW <= 0 || extractH <= 0) {
+    return sharp(paper).png().toBuffer();
   }
 
-  return sharp(out, {
-    raw: { width: targetW, height: targetH, channels: 3 },
-  })
+  const input = await sharp(resized)
+    .extract({
+      left: extractLeft,
+      top: extractTop,
+      width: extractW,
+      height: extractH,
+    })
+    .png()
+    .toBuffer();
+
+  return sharp(paper)
+    .composite([
+      {
+        input,
+        left: Math.max(0, loc[0]),
+        top: Math.max(0, loc[1]),
+      },
+    ])
     .png()
     .toBuffer();
 }

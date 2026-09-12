@@ -1,8 +1,34 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { RELICARIO, RELICARIO_HERO } from "@/lib/relicario-spec";
+
+const LOADING_STAGES = [
+  "Analizando foto...",
+  "Preparando encuadre...",
+  "Mejorando foto...",
+  "Generando vista previa...",
+];
+
+type DebugInfo = {
+  analysis: {
+    decision: string;
+    quality: string;
+    needsOutpainting: boolean;
+    needsUpscale: boolean;
+    detectionFailed: boolean;
+    width: number;
+    height: number;
+    faces: { x: number; y: number; width: number; height: number }[];
+    groupBoundingBox: { x: number; y: number; w: number; h: number } | null;
+    idealCrop: { x: number; y: number; w: number; h: number } | null;
+    crop: { x: number; y: number; w: number; h: number } | null;
+    finalSide: number | null;
+  };
+  overlay: string | null;
+  outputSide: number;
+};
 
 const loadImage = (src: string) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
@@ -133,10 +159,23 @@ async function prepareUpload(file: File) {
   return new File([blob], "retrato.jpg", { type: "image/jpeg" });
 }
 
-async function frameOnServer(file: File) {
+function isDebugEnabled() {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).has("debug");
+}
+
+function fileFromBase64(base64: string, type: string, name: string) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new File([bytes], name, { type });
+}
+
+async function frameOnServer(file: File, debug: boolean) {
   const prepared = await prepareUpload(file);
   const body = new FormData();
   body.append("image", prepared);
+  if (debug) body.append("debug", "1");
 
   const response = await fetch("/api/relicario/enhance", {
     method: "POST",
@@ -150,10 +189,26 @@ async function frameOnServer(file: File) {
     throw new Error(payload?.error ?? "No se pudo encuadrar la foto");
   }
 
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    const payload = (await response.json()) as {
+      image: string;
+      contentType?: string;
+      debug: DebugInfo;
+    };
+    return {
+      file: fileFromBase64(payload.image, payload.contentType || "image/png", "encuadre.png"),
+      debug: payload.debug,
+    };
+  }
+
   const blob = await response.blob();
-  return new File([blob], "encuadre.png", {
-    type: blob.type || "image/png",
-  });
+  return {
+    file: new File([blob], "encuadre.png", {
+      type: blob.type || "image/png",
+    }),
+    debug: null,
+  };
 }
 
 async function composePhoto(file: File) {
@@ -198,26 +253,54 @@ export default function RelicarioPreview() {
   const [preview, setPreview] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingStage, setLoadingStage] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
+  const [debugOverlay, setDebugOverlay] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!loading) return;
+    const timer = window.setInterval(() => {
+      setLoadingStage((current) =>
+        Math.min(current + 1, LOADING_STAGES.length - 1),
+      );
+    }, 2500);
+    return () => window.clearInterval(timer);
+  }, [loading]);
 
   const handleFile = async (file: File | undefined) => {
     if (!file) return;
 
     setError(null);
+    setLoadingStage(0);
     setLoading(true);
+    setDebugInfo(null);
+    setDebugOverlay((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return null;
+    });
     setPreview((current) => {
       if (current && current !== result) URL.revokeObjectURL(current);
       return null;
     });
 
     try {
-      const framed = await frameOnServer(file);
-      const composed = await composePhoto(framed);
+      const framed = await frameOnServer(file, isDebugEnabled());
+      const composed = await composePhoto(framed.file);
       setPreview((current) => {
         if (current && current !== result) URL.revokeObjectURL(current);
         return composed;
       });
+      setDebugInfo(framed.debug);
+      if (framed.debug?.overlay) {
+        const overlayFile = fileFromBase64(
+          framed.debug.overlay,
+          "image/png",
+          "debug.png",
+        );
+        setDebugOverlay(URL.createObjectURL(overlayFile));
+      }
     } catch (cause) {
       const message =
         cause instanceof Error ? cause.message : "No se pudo ajustar la foto";
@@ -300,8 +383,11 @@ export default function RelicarioPreview() {
               onClick={() => {
                 URL.revokeObjectURL(result);
                 if (preview && preview !== result) URL.revokeObjectURL(preview);
+                if (debugOverlay) URL.revokeObjectURL(debugOverlay);
                 setResult(null);
                 setPreview(null);
+                setDebugInfo(null);
+                setDebugOverlay(null);
               }}
               className="rounded-full px-4 py-3 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-800"
             >
@@ -325,10 +411,10 @@ export default function RelicarioPreview() {
             </h2>
             <p className="mt-1 text-sm text-zinc-500">
               {loading
-                ? "Ajustando tu foto al corazón y completando los bordes que faltan."
+                ? LOADING_STAGES[loadingStage]
                 : preview
                   ? "Así se ve tu foto dentro del relicario."
-                  : "Ajustamos las proporciones para que tu foto se vea bien dentro del corazón. Conservamos la imagen original y la IA completa los bordes que falten."}
+                  : "Tu foto se ve completa en el corazón. El resto se rellena con un desenfoque de la misma imagen."}
             </p>
 
             <input
@@ -349,17 +435,52 @@ export default function RelicarioPreview() {
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/70">
                   <span className="h-10 w-10 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-900" />
                   <p className="text-sm font-medium text-zinc-800">
-                    Ajustando el encuadre…
+                    {LOADING_STAGES[loadingStage]}
                   </p>
                 </div>
               </div>
             ) : preview ? (
-              <div className="mt-4 min-h-0 flex-1 overflow-hidden rounded-xl bg-white">
-                <img
-                  src={preview}
-                  alt="Resultado en el relicario"
-                  className="max-h-[50vh] w-full object-contain"
-                />
+              <div className="mt-4 min-h-0 flex-1 overflow-auto">
+                <div className="overflow-hidden rounded-xl bg-white">
+                  <img
+                    src={preview}
+                    alt="Resultado en el relicario"
+                    className="max-h-[50vh] w-full object-contain"
+                  />
+                </div>
+                {debugInfo && (
+                  <div className="mt-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-xs text-zinc-600">
+                    <p className="font-semibold text-zinc-800">
+                      Debug: {debugInfo.analysis.decision}
+                    </p>
+                    <p className="mt-1">
+                      {debugInfo.analysis.width}×{debugInfo.analysis.height}
+                      {debugInfo.analysis.finalSide
+                        ? ` → ${debugInfo.analysis.finalSide}×${debugInfo.analysis.finalSide}`
+                        : ""}
+                      {` · calidad ${debugInfo.analysis.quality}`}
+                      {debugInfo.analysis.detectionFailed ? " · sin caras" : ""}
+                      {debugInfo.analysis.needsOutpainting ? " · outpaint" : ""}
+                      {debugInfo.analysis.needsUpscale ? " · upscale" : ""}
+                    </p>
+                    <p className="mt-1">
+                      caras {debugInfo.analysis.faces.length}
+                      {debugInfo.analysis.groupBoundingBox
+                        ? ` · grupo ${Math.round(debugInfo.analysis.groupBoundingBox.w)}×${Math.round(debugInfo.analysis.groupBoundingBox.h)}`
+                        : ""}
+                      {debugInfo.analysis.idealCrop
+                        ? ` · 1:1 ${Math.round(debugInfo.analysis.idealCrop.w)}`
+                        : ""}
+                    </p>
+                    {debugOverlay && (
+                      <img
+                        src={debugOverlay}
+                        alt="Cajas de encuadre"
+                        className="mt-2 max-h-48 w-full rounded-lg object-contain"
+                      />
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               <button

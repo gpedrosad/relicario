@@ -43,6 +43,93 @@ test("la máscara nunca habilita generación sobre la foto, incluidos sus bordes
   assert.equal(covered.generate, false);
 });
 
+test("el crop 1:1 agrupa caras, se desplaza antes de pedir outpaint y no inventa composición", () => {
+  const { planSquarePhoto, unionFaces, expandBox, smallestSquare } = modules()("@/lib/relicario-crop");
+  const { RELICARIO } = modules()("@/lib/relicario-spec");
+  const options = { outputSide: RELICARIO.insert.outputSide, margins: RELICARIO.cropMargins };
+
+  const pair = [
+    { x: 120, y: 80, width: 70, height: 80, confidence: 0.9 },
+    { x: 210, y: 90, width: 70, height: 80, confidence: 0.9 },
+  ];
+  const group = unionFaces(pair);
+  assert.equal(group.x, 120);
+  assert.equal(group.w, 160);
+  const expanded = expandBox(group, RELICARIO.cropMargins.full);
+  assert.ok(expanded.x < group.x);
+  assert.ok(expanded.y < group.y);
+  assert.ok(expanded.w > group.w);
+  const square = smallestSquare(expanded);
+  assert.equal(square.w, square.h);
+
+  const fitted = planSquarePhoto(900, 700, pair, options);
+  assert.equal(fitted.needsOutpainting, false);
+  assert.equal(fitted.detectionFailed, false);
+  assert.ok(fitted.crop.x >= 0);
+  assert.ok(fitted.crop.y >= 0);
+  assert.ok(fitted.crop.x + fitted.crop.w <= 900);
+  assert.ok(fitted.crop.y + fitted.crop.h <= 700);
+  assert.ok(fitted.decision === "crop" || fitted.decision === "crop+upscale");
+
+  const nearTop = planSquarePhoto(800, 1000, [
+    { x: 300, y: 10, width: 80, height: 90, confidence: 0.9 },
+  ], options);
+  assert.equal(nearTop.needsOutpainting, false);
+  assert.ok(nearTop.crop.y >= 0);
+  assert.ok(nearTop.crop.y + nearTop.crop.h <= 1000);
+
+  const againstEdge = planSquarePhoto(400, 150, [
+    { x: 20, y: 20, width: 40, height: 40, confidence: 0.9 },
+    { x: 340, y: 20, width: 40, height: 40, confidence: 0.9 },
+  ], options);
+  assert.equal(againstEdge.needsOutpainting, true);
+  assert.match(againstEdge.decision, /outpaint/);
+
+  const tiny = planSquarePhoto(2000, 2000, [
+    { x: 900, y: 900, width: 20, height: 24, confidence: 0.9 },
+  ], options);
+  assert.equal(tiny.needsOutpainting, false);
+  assert.equal(tiny.needsUpscale, true);
+
+  const none = planSquarePhoto(800, 600, [], options);
+  assert.equal(none.detectionFailed, true);
+  assert.equal(none.needsOutpainting, false);
+  assert.equal(none.crop.w, none.crop.h);
+  assert.equal(none.crop.w, 600);
+  assert.equal(none.crop.x, 100);
+
+  const { faceZoomCrop, frameFacesForHole } = modules()("@/lib/relicario-crop");
+  const zoom = faceZoomCrop(2000, 2000, [
+    { x: 900, y: 880, width: 80, height: 90, confidence: 0.9 },
+    { x: 1020, y: 890, width: 80, height: 90, confidence: 0.9 },
+  ], options);
+  assert.ok(zoom);
+  assert.ok(zoom.w < 400, `lejos ${zoom.w}`);
+  assert.ok(zoom.x > 400);
+  const near = faceZoomCrop(800, 800, [
+    { x: 220, y: 180, width: 360, height: 400, confidence: 0.9 },
+  ], options);
+  assert.ok(near);
+  assert.ok(near.w > zoom.w, `cerca ${near.w} vs lejos ${zoom.w}`);
+  assert.equal(faceZoomCrop(800, 600, [], options), null);
+
+  const scale = RELICARIO.faceScale;
+  const far = frameFacesForHole(2000, 2000, [
+    { x: 900, y: 880, width: 80, height: 90, confidence: 0.9 },
+    { x: 1020, y: 890, width: 80, height: 90, confidence: 0.9 },
+  ], 1102, 984, scale);
+  assert.ok(far);
+  assert.ok(Math.abs(far.w / far.h - 1102 / 984) < 0.03, `ratio ${far.w / far.h}`);
+  assert.ok(100 / far.h <= scale.maxHeight + 0.02, `alto cara ${100 / far.h}`);
+  assert.ok(200 / far.w <= scale.maxWidth + 0.02, `ancho grupo ${200 / far.w}`);
+  const closeUp = frameFacesForHole(800, 800, [
+    { x: 220, y: 180, width: 360, height: 400, confidence: 0.9 },
+  ], 1102, 984, scale);
+  assert.ok(closeUp);
+  assert.ok(closeUp.w > far.w);
+  assert.equal(frameFacesForHole(800, 600, [], 1102, 984, scale), null);
+});
+
 test("el prompt distingue autocompletado de pelo y fondo sin inducir un diagrama", () => {
   const load = modules();
   const { buildRelicarioPrompt } = load("@/lib/relicario-prompt");
@@ -54,6 +141,10 @@ test("el prompt distingue autocompletado de pelo y fondo sin inducir un diagrama
   const background = buildRelicarioPrompt({ completeTop: false });
   assert.match(background, /heads are already complete/);
   assert.doesNotMatch(background, /continue only that same hair/);
+  const outpaint = load("@/lib/relicario-prompt").buildSquareOutpaintPrompt();
+  assert.match(outpaint, /Do not modify existing faces/);
+  assert.match(outpaint, /square composition/);
+  assert.doesNotMatch(outpaint, /locket|heart-shaped/);
 });
 
 test("las personas entran enteras en la zona segura, sin recorte", async () => {
@@ -78,61 +169,47 @@ test("las personas entran enteras en la zona segura, sin recorte", async () => {
   assert.equal(plan.coversCanvas, false);
 });
 
-test("la IA pinta fuera de la foto y se restauran los píxeles originales", async () => {
-  const previous = process.env.REPLICATE_API_TOKEN;
-  process.env.REPLICATE_API_TOKEN = "test-only";
-  let fillCalls = 0;
-  class FakeReplicate {
-    async run(_model, { input }) {
-      if (input.query) return { detections: [] };
-      if (input.preserve_alpha) throw new Error("Detección no disponible en esta prueba");
-      fillCalls += 1;
-      const generated = await sharp({
-        create: { width: 1102, height: 984, channels: 3, background: "#ff0000" },
-      }).png().toBuffer();
-      return { blob: async () => new Blob([generated], { type: "image/png" }) };
-    }
-  }
-  try {
-    const load = modules({ replicate: FakeReplicate });
-    const source = await sharp({
-      create: { width: 300, height: 500, channels: 3, background: "#2266aa" },
-    }).png().toBuffer();
-    const { bytes } = await load("@/lib/replicate").enhancePortrait(source);
-    const { originalImageSize: size, originalImageLocation: loc } = load("@/lib/relicario-frame")
-      .frameForHeart(300, 500, null, 1102, 984,
-        await load("@/lib/relicario-mask").heartSafeArea(1102, 984, { x: 0, y: 0, w: 300, h: 500 }));
-    const heart = await sharp(await load("@/lib/relicario-mask").heartKeepMask(1102, 984))
-      .greyscale().raw().toBuffer();
-    const actual = await sharp(bytes).removeAlpha().raw().toBuffer();
-    let preserved = 0;
-    let generated = 0;
-    const left = Math.max(0, loc[0]);
-    const top = Math.max(0, loc[1]);
-    const right = Math.min(1102, loc[0] + size[0]);
-    const bottom = Math.min(984, loc[1] + size[1]);
-    for (let y = 0; y < 984; y++) {
-      for (let x = 0; x < 1102; x++) {
-        const i = y * 1102 + x;
-        if (heart[i] < 200) continue;
-        const inPhoto = x >= left && x < right && y >= top && y < bottom;
-        const pixel = [...actual.subarray(i * 3, i * 3 + 3)];
-        if (inPhoto) {
-          assert.deepEqual(pixel, [34, 102, 170]);
-          preserved += 1;
-        } else {
-          assert.deepEqual(pixel, [255, 0, 0]);
-          generated += 1;
-        }
+test("la foto encuadrada cubre el hueco con sus píxeles, sin blur ni marfil", async () => {
+  const load = modules();
+  const { RELICARIO } = load("@/lib/relicario-spec");
+  const source = await sharp({
+    create: { width: 300, height: 500, channels: 3, background: "#2266aa" },
+  }).png().toBuffer();
+  const { bytes, analysis } = await load("@/lib/replicate").enhancePortrait(source);
+  assert.equal(analysis.decision, "cover");
+  assert.equal(analysis.needsOutpainting, false);
+  assert.equal(analysis.crop.w, 1102);
+  assert.equal(analysis.crop.h, 984);
+  const heart = await sharp(await load("@/lib/relicario-mask").heartKeepMask(1102, 984))
+    .greyscale().raw().toBuffer();
+  const actual = await sharp(bytes).removeAlpha().raw().toBuffer();
+  const paper = [RELICARIO.paperRgb.r, RELICARIO.paperRgb.g, RELICARIO.paperRgb.b];
+  const cx = Math.round(analysis.crop.x + analysis.crop.w / 2);
+  const cy = Math.round(analysis.crop.y + analysis.crop.h / 2);
+  const center = (cy * 1102 + cx) * 3;
+  assert.deepEqual([...actual.subarray(center, center + 3)], [34, 102, 170]);
+  let heartPixels = 0;
+  let paperInHeart = 0;
+  for (let y = 0; y < 984; y++) {
+    for (let x = 0; x < 1102; x++) {
+      if (heart[y * 1102 + x] < 200) continue;
+      heartPixels += 1;
+      const i = (y * 1102 + x) * 3;
+      if (actual[i] === paper[0] && actual[i + 1] === paper[1] && actual[i + 2] === paper[2]) {
+        paperInHeart += 1;
       }
     }
-    assert.equal(fillCalls, 1);
-    assert.ok(preserved > 10000);
-    assert.ok(generated > 1000);
-  } finally {
-    if (previous === undefined) delete process.env.REPLICATE_API_TOKEN;
-    else process.env.REPLICATE_API_TOKEN = previous;
   }
+  assert.ok(heartPixels > 10000);
+  assert.ok(paperInHeart < heartPixels * 0.02, `marfil en hueco ${paperInHeart}`);
+});
+
+test("el rectángulo seguro de contain es más grande que el insert 1:1", async () => {
+  const { largestFitRect } = modules()("@/lib/relicario-mask");
+  const square = await largestFitRect(1102, 984, 800, 800);
+  assert.ok(Math.min(square.w, square.h) > 493, `lado ${Math.min(square.w, square.h)}`);
+  const wide = await largestFitRect(1102, 984, 1600, 900);
+  assert.ok(wide.w > square.w * 0.9);
 });
 
 test("el contorno de referencia coincide con los lóbulos y la hendidura reales", async () => {
@@ -147,7 +224,7 @@ test("el contorno de referencia coincide con los lóbulos y la hendidura reales"
   }
 });
 
-test("el ajuste aprovecha más área y protege cabeza, cuerpo y espacio para completar pelo", async () => {
+test("el ajuste aprovecha más área y protege cabeza y cuerpo", async () => {
   const load = modules();
   const { heartSafeArea, heartKeepMask } = load("@/lib/relicario-mask");
   const { frameForHeart, subjectBounds } = load("@/lib/relicario-frame");
@@ -174,6 +251,13 @@ test("el ajuste aprovecha más área y protege cabeza, cuerpo y espacio para com
   }
 });
 
+test("la zona segura usa la parte ancha del corazón, no el ancho de la hendidura", async () => {
+  const { heartSafeArea } = modules()("@/lib/relicario-mask");
+  const safe = await heartSafeArea(1102, 984, { x: 0, y: 0, w: 800, h: 600 });
+  assert.ok(safe.w > 1102 * 0.45, `ancho ${safe.w}`);
+  assert.ok(safe.h > 984 * 0.35, `alto ${safe.h}`);
+});
+
 test("la zona de cabezas respeta el hueco real del PNG y el margen bajo la hendidura", async () => {
   const load = modules();
   const { heartSafeArea, heartKeepMask } = load("@/lib/relicario-mask");
@@ -191,6 +275,56 @@ test("la zona de cabezas respeta el hueco real del PNG y el margen bajo la hendi
   }
 });
 
+
+test("el cover llena el canvas con la foto original", async () => {
+  const { placePhotoCover } = modules()("@/lib/relicario-background");
+  const photo = await sharp({
+    create: { width: 40, height: 80, channels: 3, background: "#2266aa" },
+  }).png().toBuffer();
+  const { png, dest } = await placePhotoCover(photo, 100, 80);
+  assert.deepEqual(dest, { x: 0, y: 0, w: 100, h: 80 });
+  const { data } = await sharp(png).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  assert.deepEqual([...data.subarray(0, 3)], [34, 102, 170]);
+  const mid = (40 * 100 + 50) * 3;
+  assert.deepEqual([...data.subarray(mid, mid + 3)], [34, 102, 170]);
+});
+
+test("el outpaint protege los píxeles originales con máscara y no llama IA si no hace falta", async () => {
+  const { squareOutpaintCanvas, padSquareWithPaper } = modules()("@/lib/relicario-outpaint");
+  const { RELICARIO } = modules()("@/lib/relicario-spec");
+  const photo = await sharp({
+    create: { width: 80, height: 60, channels: 3, background: "#2266aa" },
+  }).png().toBuffer();
+  const crop = { x: -20, y: -10, w: 120, h: 120 };
+  const prepared = await squareOutpaintCanvas(photo, 80, 60, crop);
+  assert.equal(prepared.side, 120);
+  const mask = await sharp(prepared.mask).greyscale().raw().toBuffer();
+  assert.equal(mask[0], 255);
+  const inside = (prepared.pasteY + 5) * 120 + (prepared.pasteX + 5);
+  assert.equal(mask[inside], 0);
+  const padded = await padSquareWithPaper(photo, 80, 60, crop);
+  const { data, info } = await sharp(padded).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  assert.deepEqual([...data.subarray(0, 3)], [
+    RELICARIO.paperRgb.r, RELICARIO.paperRgb.g, RELICARIO.paperRgb.b,
+  ]);
+  const px = ((prepared.pasteY + 5) * info.width + (prepared.pasteX + 5)) * 3;
+  assert.deepEqual([...data.subarray(px, px + 3)], [34, 102, 170]);
+});
+
+test("el insert usa marfil donde la foto no cubre, sin estirar bordes", async () => {
+  const { placePhotoAndExtend } = modules()("@/lib/relicario-background");
+  const { RELICARIO } = modules()("@/lib/relicario-spec");
+  const photo = await sharp({
+    create: { width: 40, height: 40, channels: 3, background: "#2266aa" },
+  }).png().toBuffer();
+  const placed = await placePhotoAndExtend(photo, [40, 40], [10, 10], 80, 80);
+  const { data } = await sharp(placed).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  assert.deepEqual([...data.subarray(0, 3)], [
+    RELICARIO.paperRgb.r, RELICARIO.paperRgb.g, RELICARIO.paperRgb.b,
+  ]);
+  const i = (15 * 80 + 15) * 3;
+  assert.deepEqual([...data.subarray(i, i + 3)], [34, 102, 170]);
+});
 
 test("la unión suaviza el fondo sin volver transparente ni alterar a la persona", async () => {
   const { blendPhotoBackground } = modules()("@/lib/relicario-background");
@@ -230,41 +364,3 @@ test("la validación distingue caras existentes, contexto y gente inventada", ()
   assert.throws(() => addedSubjects({ detections: [{ label: "face", confidence: 1, bbox: [0, 1] }] }, original));
 });
 
-for (const keepsInventing of [false, true]) {
-  test(keepsInventing ? "no entrega una imagen si ambos rellenos inventan caras" : "reintenta el relleno si la primera versión inventa una cara", async () => {
-    const previous = process.env.REPLICATE_API_TOKEN;
-    process.env.REPLICATE_API_TOKEN = "test-only";
-    let fills = 0;
-    let checks = 0;
-    const source = await sharp({ create: {
-      width: 200, height: 300, channels: 4, background: "#2266aa",
-    } }).png().toBuffer();
-    class FakeReplicate {
-      async run(_model, { input }) {
-        if (input.preserve_alpha) return { blob: async () => new Blob([source], { type: "image/png" }) };
-        if (input.query) {
-          checks++;
-          assert.equal(input.show_visualisation, false);
-          return { detections: keepsInventing || checks === 1
-            ? [{ label: "face", confidence: 0.8, bbox: [100, 220, 180, 300] }]
-            : [] };
-        }
-        fills++;
-        const generated = await sharp({ create: {
-          width: 1102, height: 984, channels: 3, background: "#ff0000",
-        } }).png().toBuffer();
-        return { blob: async () => new Blob([generated], { type: "image/png" }) };
-      }
-    }
-    try {
-      const { enhancePortrait } = modules({ replicate: FakeReplicate })("@/lib/replicate");
-      if (keepsInventing) await assert.rejects(enhancePortrait(source), /agregó una persona o cara/);
-      else assert.equal((await enhancePortrait(source)).contentType, "image/png");
-      assert.equal(fills, 2);
-      assert.equal(checks, 2);
-    } finally {
-      if (previous === undefined) delete process.env.REPLICATE_API_TOKEN;
-      else process.env.REPLICATE_API_TOKEN = previous;
-    }
-  });
-}

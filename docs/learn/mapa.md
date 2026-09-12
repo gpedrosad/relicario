@@ -10,7 +10,7 @@ Repo: [gpedrosad/relicario](https://github.com/gpedrosad/relicario). App: Next.j
 | --- | --- |
 | `/` | Tienda + `RelicarioPreview` + `ProductPurchase` |
 | `/costos` | Tablero. Noindex |
-| `POST /api/relicario/enhance` | Encuadre + fill + composite sobre `public/reli.png` |
+| `POST /api/relicario/enhance` | Zoom a caras + cover del hueco + composite sobre `public/reli.png` |
 
 ## Piezas clave
 
@@ -18,7 +18,7 @@ Repo: [gpedrosad/relicario](https://github.com/gpedrosad/relicario). App: Next.j
 | --- | --- |
 | Spec del PNG | `src/lib/relicario-spec.ts` |
 | Máscara / hueco | `src/lib/relicario-mask.ts` — path literales `public/reli.png` |
-| IA | `src/lib/replicate.ts` — `bria/remove-background`, `flux-fill-pro` |
+| IA | `src/lib/replicate.ts` — Bria solo para ubicar caras; cover local |
 | Costos | `src/lib/costos.ts` |
 | Pedido China | `src/lib/pedido-china.ts` — 50 piezas + extras del primer vuelo |
 | Extras / versiones | `src/lib/addons.ts` — mismo metal, cambia packaging |

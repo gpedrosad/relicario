@@ -52,16 +52,10 @@ Alpha global de `reli.png`: ~63% transparente (fondo + hueco), ~36% opaco (metal
 
 ## Composite (foto del usuario)
 
-1. `bria/remove-background` detecta la silueta (no redibuja a nadie).
-2. Se estima la **cabeza** según la silueta (cuerpo entero, busto, selfie o grupo).
-3. Se **encaja** la silueta del grupo o de la persona bajo la hendidura. Se busca la mayor escala uniforme posible en un rectángulo contenido en el hueco real, según la proporción del sujeto: desde el 27% del alto y hasta un máximo del 90%, con margen al metal del 3,5% del lado menor. Si la cabeza toca el borde superior, se reserva un 30% de su altura estimada para autocompletar arriba. Las medidas proceden de la silueta; no es un detector facial.
-4. `flux-fill-pro` completa fuera de la foto: fondo y, cuando hace falta, continuación del pelo sobre una cabeza cortada. La foto completa queda negra en la máscara (protegida), y el exterior blanco (generar). Se rellena hasta los bordes del canvas y luego se aplica el corazón exacto, evitando halos o espacios vacíos. Se repone la foto original escalada y opaca sobre el resultado para impedir cambios en el contenido existente, aunque el modelo ignore la máscara.
-5. Canvas **1102×984** (2× el hueco). La imagen ya encuadrada se pega en el bbox del hueco.
-6. `destination-in` con la máscara del corazón.
-7. `source-over` de `reli.png`.
-8. `destination-over` relleno **blanco `#ffffff`** (fuera del relicario, no dentro del hueco).
-
-Antes de entregar el insert, un detector revisa si aparecen personas o caras fuera de la foto original. Si las encuentra, se regenera una vez; un segundo resultado con detecciones nuevas se descarta. Ver los umbrales y límites en [Áreas de personas](relicario-areas.md).
+1. Si hay caras, se recorta al **ratio del hueco** alrededor del grupo. Las caras no superan ~34% del alto. Si no hay, se usa la foto completa.
+2. Esa foto se pone en **cover** del hueco: nítida, con su fondo original. Sin blur ni viñeta.
+3. Canvas **1102×984** (2× el hueco). Clip al hueco. `reli.png` encima. Fuera del relicario: blanco.
+4. Sin IA generativa para rellenar.
 
 Exportar `image/png`. Nombre de descarga: `relicario-con-mi-foto.png`.
 
@@ -69,14 +63,9 @@ Exportar `image/png`. Nombre de descarga: `relicario-con-mi-foto.png`.
 
 El código aplica estas medidas y las representa en la imagen de entrada y la máscara:
 
-- Lienzo del insert: **1102 × 984 px**, distinto del PNG del producto (**1536 × 1024 px**).
-- Coordenadas y dimensiones reales del rectángulo original que no puede cambiar.
-- Área segura calculada para esa persona o grupo, en píxeles del insert.
-- Contorno completo del hueco, incluyendo los dos lóbulos separados por la hendidura. Se verifican también 21 filas de referencia en las pruebas.
-- Máscara: negro conserva y blanco genera; escala y posición ya resueltas por código.
-- Reserva de espacio para autocompletado superior cuando corresponde.
-
-`src/lib/relicario-prompt.ts` instruye al modelo sobre conservación de las zonas negras, relleno de todas las zonas blancas, continuidad de iluminación, perspectiva, colores y textura; prohíbe rostros adicionales, accesorios, texto, marcos y patrones repetidos. Si falta parte superior, pide pelo natural que continúe el existente. Es contenido nuevo generado, no recuperación de información ausente.
+- Lienzo de trabajo: **1102 × 984 px**. Cover de la foto encuadrada, píxeles originales.
+- Clip al hueco real.
+- Contorno completo del hueco, incluyendo los dos lóbulos separados por la hendidura.
 
 No se incluyen tablas de coordenadas ni instrucciones de dibujar un relicario en el prompt: en la prueba visual inducían gráficos sobre la foto. La geometría se controla con la máscara y el recorte definitivo del PNG a nivel de píxel. El modelo nunca genera ni modifica el metal del relicario.
 

@@ -1,6 +1,6 @@
-import { enhancePortrait } from "@/lib/replicate";
+import { enhanceDebugPayload, enhancePortrait } from "@/lib/replicate";
 
-export const maxDuration = 180;
+export const maxDuration = 60;
 
 const MAX_BYTES = 8 * 1024 * 1024;
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
@@ -9,6 +9,9 @@ export async function POST(request: Request) {
   try {
     const form = await request.formData();
     const file = form.get("image");
+    const debug =
+      form.get("debug") === "1" ||
+      process.env.RELICARIO_DEBUG === "1";
 
     if (!(file instanceof File)) {
       return Response.json({ error: "Sube una imagen" }, { status: 400 });
@@ -23,12 +26,19 @@ export async function POST(request: Request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const { bytes, contentType } = await enhancePortrait(buffer);
+    const result = await enhancePortrait(buffer, { debug });
 
-    return new Response(new Uint8Array(bytes), {
+    if (debug) {
+      return Response.json(enhanceDebugPayload(result), {
+        headers: { "Cache-Control": "no-store" },
+      });
+    }
+
+    return new Response(new Uint8Array(result.bytes), {
       headers: {
-        "Content-Type": contentType,
+        "Content-Type": result.contentType,
         "Cache-Control": "no-store",
+        "X-Relicario-Decision": result.analysis.decision,
       },
     });
   } catch (error) {

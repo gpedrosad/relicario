@@ -70,13 +70,12 @@ Si el promedio de $4.000 se va a $5.000–$6.000 (Magallanes, express 24 h, rein
 
 ## 3. IA (Replicate)
 
-Hasta dos llamadas por preview: `bria/remove-background` y, si el corazón no está lleno, `flux-fill-pro` extiende a las personas de la foto.
+Una llamada por preview: `bria/remove-background` para encuadrar. El hueco vacío es marfil, no Flux.
 
 | Paso | Costo típico | En CLP @ $930 |
 | --- | --- | --- |
 | Recorte | US$0,008–0,025 | $7–$23 |
-| Expand | US$0,03–0,07 | $28–$65 |
-| **Preview** | **US$0,04–0,10** | **$37–$93** |
+| **Preview** | **US$0,01–0,03** | **$7–$25** |
 
 Planificación: **$100 / preview**. En las tablas: **4 previews por venta = $400**.
 
