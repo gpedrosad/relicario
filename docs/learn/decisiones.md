@@ -4,7 +4,15 @@ Cerradas. Para reabrir hace falta un dato nuevo (número, ley, o que se rompió 
 
 | Fecha | Decisión | Por qué | No hacer |
 | --- | --- | --- | --- |
-| 2026-09 | Composite solo sobre `/reli.png` | Tiene alpha. `imagenrelicario.png` es damero rasterizado | Usar el PNG legacy para pegar la foto |
+| 2026-09-13 | Envío $2.000 bajo $42.990; gratis desde $42.990. Llavero $8.990 | El relicario solo no alcanza; el llavero o ~$8.000 en extras sí. Empuja attach sin mentir “gratis siempre” | Umbral más bajo (casi cualquier extra) o gratis plano |
+| 2026-09-13 | Llavero: modal al pulsar Comprar, con la misma foto. Luego `/checkout` | El attach es un paso de intención, no de landing. Envío gratis es el gancho | Ofrecerlo en galería, extras o debajo de Aplicar |
+| 2026-09-13 | Acabado dorado o plateado, mismo precio. Galería: hero + overlays | No dejar solo un color; los PNG ya existían. “Plateado” es color, no 925 | Inventar llavero dorado o decir plata de ley |
+| 2026-09-13 | Copy: acero inoxidable. No plata ni 925 | El producto no es plata | Prometer plata de ley |
+| 2026-09-12 | Al pagar: `/checkout` (front Shopify). CTA wow / comprar / carrito | Marca el momento; Shopify cobra después | Inventar cobro ni un carrito aparte ahora |
+| 2026-09-12 | Tras Aplicar: foto + Comprar este relicario. Addons en la columna | El wow pide comprar, no el catálogo | Abrir extras en el modal |
+| 2026-09-12 | Overlay: llavero chico + argolla grande. Hueco remédido en `relicario-llavero.png` | Tiene que leerse como llavero; la foto encaja en proporción | Forzar el hueco 1:1 del colgante dorado |
+| 2026-09-12 | Mask path literal `relicario-llavero.png` | El hueco ya no es el del colgante | Path dinámico (`RELICARIO.file`) |
+| 2026-09 | Composite solo sobre PNG con alpha real | `relicario-legacy-sin-alpha.png` es damero rasterizado | Usar el PNG legacy para pegar la foto |
 | 2026-09-12 | Tras el encuadre, la foto se arrastra y se escala en el cliente | El recorte automático no calza siempre | Volver a mandar la foto a Replicate para un nudge |
 | 2026-09-12 | Caras: tope de escala en el hueco (`faceScale`) | El zoom 1:1 las dejaba gigantes | Recortar justo al box de la cara |
 | 2026-09-12 | Hueco: foto encuadrada en cover, fondo original | Blur, viñeta y escena expandida se leían como recorte | Inventar o desenfocar el fondo del corazón |
@@ -25,4 +33,4 @@ Cerradas. Para reabrir hace falta un dato nuevo (número, ley, o que se rompió 
 | 2026-09 | WhatsApp **después** de ver el relicario, no antes | El wow es la foto en el corazón; el art. 12 presume nulo el peaje innecesario | Exigir el número para generar |
 | 2026-09 | Kapso para el drip, no Twilio | WhatsApp + workflows; 50 piezas no piden SMS/voz | Los dos proveedores a la vez |
 | 2026-09 | No anunciar en Meta con *su* foto | Titular ≠ comprador; memorial; política de ads | Subir el PNG personalizado a un ad |
-| 2026-09 | Path del mask: `path.join(process.cwd(), "public", "reli.png")` | Path dinámico → Turbopack traza todo el repo y Vercel falla | `path.join(cwd, RELICARIO.file)` |
+| 2026-09 | Path del mask: `path.join(process.cwd(), "public", "relicario-colgante.png")` | Path dinámico → Turbopack traza todo el repo y Vercel falla | `path.join(cwd, RELICARIO.file)` |

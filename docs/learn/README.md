@@ -4,8 +4,10 @@ Memoria viva del proyecto. Las specs no viven acá: se **aprende** acá (qué de
 
 | Fuente de verdad | Archivo |
 | --- | --- |
-| Composite / `reli.png` | `src/lib/relicario-spec.ts`, `docs/relicario-png.md` |
+| Composite / `relicario-llavero.png` | `src/lib/relicario-spec.ts`, `docs/relicario-png.md` |
 | Costos | `src/lib/costos.ts`, `docs/costos-relicario.md` |
+| Funnel y eventos de la landing | `docs/funnel-landing.md` |
+| Envío gratis / ticket | `docs/learn/envio-gratis-ticket.md` |
 | Ley 21.719 en esta web | `docs/ley-21719-relicario.md` |
 | Este índice | `docs/learn/README.md` |
 
@@ -19,6 +21,7 @@ Memoria viva del proyecto. Las specs no viven acá: se **aprende** acá (qué de
 | [lecciones.md](lecciones.md) | Lo que ya dolió o funcionó. No repetir |
 | [preguntas.md](preguntas.md) | Huecos. Si se responde, va a decisión o hipótesis |
 | [log.md](log.md) | Cronológico. Solo se agrega arriba |
+| [envio-gratis-ticket.md](envio-gratis-ticket.md) | Umbral de envío y palancas de ticket |
 
 ## Cómo usa esto el agente
 

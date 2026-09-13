@@ -2,11 +2,37 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import RelicarioPhotoEditor, {
   exportRelicarioEdit,
 } from "@/components/RelicarioPhotoEditor";
-import { RELICARIO, RELICARIO_HERO } from "@/lib/relicario-spec";
+import LlaveroUpsellModal from "@/components/LlaveroUpsellModal";
+import { RELICARIO, RELICARIO_HERO, RELICARIO_LLAVERO } from "@/lib/relicario-spec";
 import type { PhotoBox, PhotoPan } from "@/lib/relicario-pan";
+import {
+  LANDING_GALLERY,
+  overlaySrc,
+  type GalleryItem,
+} from "@/lib/relicario-finish";
+import {
+  LLAVERO_ADDON_ID,
+  formatClp,
+  toggleAddon,
+} from "@/lib/addons";
+import {
+  BEFORE_CHECKOUT_EVENT,
+  checkoutHref,
+  checkoutTotals,
+  requestCheckout,
+  type BeforeCheckoutDetail,
+  type CheckoutFrom,
+} from "@/lib/checkout";
+import { useProjectLocal } from "@/components/ProjectLocalProvider";
+import {
+  LOCAL_PROJECT_DEFAULT,
+  readLocalProject,
+  writeLocalProject,
+} from "@/lib/local-project";
 
 const LOADING_STAGES = [
   "Analizando foto...",
@@ -51,17 +77,25 @@ type HoleMask = {
   maxY: number;
 };
 
-let holeMaskPromise: Promise<HoleMask> | null = null;
+type OverlayHole = {
+  src: string;
+  seedXRatio: number;
+  seedYRatio: number;
+  alphaCut: number;
+};
 
-async function getHoleMask(): Promise<HoleMask> {
-  if (!holeMaskPromise) {
-    holeMaskPromise = buildHoleMask();
-  }
-  return holeMaskPromise;
+const holeMaskCache = new Map<string, Promise<HoleMask>>();
+
+function getHoleMask(overlay: OverlayHole): Promise<HoleMask> {
+  const cached = holeMaskCache.get(overlay.src);
+  if (cached) return cached;
+  const pending = buildHoleMask(overlay);
+  holeMaskCache.set(overlay.src, pending);
+  return pending;
 }
 
-async function buildHoleMask(): Promise<HoleMask> {
-  const base = await loadImage(RELICARIO.src);
+async function buildHoleMask(overlay: OverlayHole): Promise<HoleMask> {
+  const base = await loadImage(overlay.src);
   const width = base.naturalWidth;
   const height = base.naturalHeight;
   const tmp = document.createElement("canvas");
@@ -73,8 +107,8 @@ async function buildHoleMask(): Promise<HoleMask> {
   ctx.drawImage(base, 0, 0);
   const { data } = ctx.getImageData(0, 0, width, height);
 
-  const seedX = Math.round(width * RELICARIO.hole.seedXRatio);
-  const seedY = Math.round(height * RELICARIO.hole.seedYRatio);
+  const seedX = Math.round(width * overlay.seedXRatio);
+  const seedY = Math.round(height * overlay.seedYRatio);
   const visited = new Uint8Array(width * height);
   const stack = [seedX, seedY];
   let minX = width;
@@ -88,7 +122,7 @@ async function buildHoleMask(): Promise<HoleMask> {
     if (x < 0 || y < 0 || x >= width || y >= height) continue;
     const i = y * width + x;
     if (visited[i]) continue;
-    if (data[i * 4 + 3] >= RELICARIO.hole.alphaCut) continue;
+    if (data[i * 4 + 3] >= overlay.alphaCut) continue;
     visited[i] = 1;
     if (x < minX) minX = x;
     if (y < minY) minY = y;
@@ -185,36 +219,83 @@ async function frameOnServer(file: File, debug: boolean) {
   };
 }
 
+const RELICARIO_OVERLAY: OverlayHole = {
+  src: RELICARIO.src,
+  seedXRatio: RELICARIO.hole.seedXRatio,
+  seedYRatio: RELICARIO.hole.seedYRatio,
+  alphaCut: RELICARIO.hole.alphaCut,
+};
+
+const LLAVERO_OVERLAY: OverlayHole = {
+  src: RELICARIO_LLAVERO.src,
+  seedXRatio: RELICARIO_LLAVERO.hole.seedXRatio,
+  seedYRatio: RELICARIO_LLAVERO.hole.seedYRatio,
+  alphaCut: RELICARIO_LLAVERO.hole.alphaCut,
+};
+
 export default function RelicarioPreview() {
+  const { tienda, setTienda } = useProjectLocal();
+  const finish = tienda.finish;
+  const showLlavero = tienda.selected.includes(LLAVERO_ADDON_ID);
+  const [catalogId, setCatalogId] = useState("hero");
+  const viewingLlavero = catalogId === "llavero" || catalogId === "llavero-ref";
+  const totals = checkoutTotals(tienda);
   const [result, setResult] = useState<string | null>(null);
+  const [llaveroPreview, setLlaveroPreview] = useState<string | null>(null);
+  const [upsellOpen, setUpsellOpen] = useState(false);
+  const [checkoutFrom, setCheckoutFrom] = useState<CheckoutFrom>("wow");
   const [preview, setPreview] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [modalIn, setModalIn] = useState(false);
+  const [heroIn, setHeroIn] = useState(false);
+  const [revealTick, setRevealTick] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
   const [debugOverlay, setDebugOverlay] = useState<string | null>(null);
   const [photo, setPhoto] = useState<ImageBitmap | null>(null);
-  const [baseImage, setBaseImage] = useState<HTMLImageElement | null>(null);
+  const [goldImage, setGoldImage] = useState<HTMLImageElement | null>(null);
+  const [silverImage, setSilverImage] = useState<HTMLImageElement | null>(null);
+  const [llaveroImage, setLlaveroImage] = useState<HTMLImageElement | null>(null);
+  const baseImage = finish === "dorado" ? goldImage : silverImage;
   const [hole, setHole] = useState<HoleMask | null>(null);
+  const [llaveroHole, setLlaveroHole] = useState<HoleMask | null>(null);
   const [crop, setCrop] = useState<PhotoBox | null>(null);
   const [scale, setScale] = useState(1);
   const [pan, setPan] = useState<PhotoPan>({ x: 0, y: 0 });
   const inputRef = useRef<HTMLInputElement>(null);
   const exportTimer = useRef<number>(0);
+  const prevFinish = useRef(finish);
+  const router = useRouter();
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([loadImage(RELICARIO.src), getHoleMask()]).then(([image, mask]) => {
+    Promise.all([
+      loadImage(overlaySrc("dorado")),
+      loadImage(overlaySrc("plateado")),
+      getHoleMask(RELICARIO_OVERLAY),
+      loadImage(RELICARIO_LLAVERO.src),
+      getHoleMask(LLAVERO_OVERLAY),
+    ]).then(([gold, silver, mask, llavero, llaveroMask]) => {
       if (!cancelled) {
-        setBaseImage(image);
+        setGoldImage(gold);
+        setSilverImage(silver);
         setHole(mask);
+        setLlaveroImage(llavero);
+        setLlaveroHole(llaveroMask);
       }
     });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (prevFinish.current === finish) return;
+    prevFinish.current = finish;
+    setCatalogId(finish);
+  }, [finish]);
 
   useEffect(() => {
     if (!loading) return;
@@ -239,6 +320,41 @@ export default function RelicarioPreview() {
     }, 60);
     return () => window.clearTimeout(exportTimer.current);
   }, [photo, baseImage, hole, crop, scale, pan, result]);
+
+  useEffect(() => {
+    if (!open) {
+      setModalIn(false);
+      return;
+    }
+    const frame = window.requestAnimationFrame(() => setModalIn(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, [open]);
+
+  useEffect(() => {
+    if (!result || revealTick === 0) {
+      setHeroIn(false);
+      return;
+    }
+    setHeroIn(false);
+    const frame = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => setHeroIn(true));
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [result, revealTick]);
+
+  const hideModal = (after?: () => void) => {
+    setModalIn(false);
+    window.setTimeout(() => {
+      setOpen(false);
+      after?.();
+    }, 220);
+  };
+
+  const openModal = () => {
+    setPreview(result);
+    setError(null);
+    setOpen(true);
+  };
 
   const handleFile = async (file: File | undefined) => {
     if (!file) return;
@@ -286,9 +402,20 @@ export default function RelicarioPreview() {
     }
   };
 
+  const composeOn = async (
+    base: HTMLImageElement,
+    mask: HoleMask,
+    nextScale: number,
+    nextPan: PhotoPan,
+  ) => {
+    if (!photo) return null;
+    return exportRelicarioEdit(photo, base, mask, crop, nextScale, nextPan);
+  };
+
   const composeCurrent = async () => {
     if (!photo || !baseImage || !hole) return preview;
-    const url = await exportRelicarioEdit(photo, baseImage, hole, crop, scale, pan);
+    const url = await composeOn(baseImage, hole, scale, pan);
+    if (!url) return preview;
     setPreview((current) => {
       if (current && current !== result && current !== url) URL.revokeObjectURL(current);
       return url;
@@ -296,25 +423,132 @@ export default function RelicarioPreview() {
     return url;
   };
 
+  const composeDisplay = async () => {
+    if (!photo) return null;
+    if (viewingLlavero && llaveroImage && llaveroHole) {
+      return composeOn(llaveroImage, llaveroHole, 1, { x: 0, y: 0 });
+    }
+    if (!baseImage || !hole) return null;
+    return composeOn(baseImage, hole, scale, pan);
+  };
+
   const apply = async () => {
-    const src = (await composeCurrent()) ?? preview;
+    const src = (await composeDisplay()) ?? (await composeCurrent()) ?? preview;
     if (!src) return;
     setResult((current) => {
       if (current && current !== src) URL.revokeObjectURL(current);
       return src;
     });
-    setOpen(false);
+    hideModal(() => {
+      setCatalogId(finish);
+      setRevealTick((tick) => tick + 1);
+    });
   };
+
+  useEffect(() => {
+    if (!photo || !result || !baseImage || !hole) return;
+    let cancelled = false;
+    composeDisplay().then((url) => {
+      if (cancelled || !url) return;
+      setResult((current) => {
+        if (current && current !== url) URL.revokeObjectURL(current);
+        return url;
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [viewingLlavero, finish, baseImage]);
+
+  useEffect(() => {
+    if (!photo || !llaveroImage || !llaveroHole) return;
+    let cancelled = false;
+    composeOn(llaveroImage, llaveroHole, 1, { x: 0, y: 0 }).then((url) => {
+      if (cancelled || !url) return;
+      setLlaveroPreview((current) => {
+        if (current && current !== url) URL.revokeObjectURL(current);
+        return url;
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [photo, crop, llaveroImage, llaveroHole]);
+
+  useEffect(() => {
+    const onBefore = (event: Event) => {
+      if (!result || showLlavero) return;
+      const custom = event as CustomEvent<BeforeCheckoutDetail>;
+      event.preventDefault();
+      openUpsell(custom.detail?.from ?? "wow");
+    };
+    window.addEventListener(BEFORE_CHECKOUT_EVENT, onBefore);
+    return () => window.removeEventListener(BEFORE_CHECKOUT_EVENT, onBefore);
+  }, [result, showLlavero]);
 
   const close = () => {
     if (loading) return;
-    setOpen(false);
-    setError(null);
-    setPreview((current) => {
-      if (current && current !== result) URL.revokeObjectURL(current);
-      return result;
+    hideModal(() => {
+      setError(null);
+      setPreview((current) => {
+        if (current && current !== result) URL.revokeObjectURL(current);
+        return result;
+      });
     });
   };
+
+  const openUpsell = (from: CheckoutFrom) => {
+    setCheckoutFrom(from);
+    setUpsellOpen(true);
+  };
+
+  const goToCheckout = (from: CheckoutFrom) => {
+    router.push(checkoutHref(from));
+  };
+
+  const goToBuy = () => {
+    requestCheckout("wow", goToCheckout);
+  };
+
+  const persistLlavero = () => {
+    const selected = tienda.selected.includes(LLAVERO_ADDON_ID)
+      ? tienda.selected
+      : toggleAddon(tienda.selected, LLAVERO_ADDON_ID);
+    const next = { ...tienda, selected };
+    writeLocalProject({
+      ...(readLocalProject() ?? LOCAL_PROJECT_DEFAULT),
+      tienda: next,
+    });
+    setTienda(next);
+  };
+
+  const finishUpsell = (add: boolean) => {
+    if (add) persistLlavero();
+    setUpsellOpen(false);
+    const href = checkoutHref(checkoutFrom);
+    window.setTimeout(() => {
+      router.push(href);
+    }, 0);
+  };
+
+  const pickGallery = (item: GalleryItem) => {
+    setCatalogId(item.id);
+    if (item.finish) {
+      setTienda((current) => ({ ...current, finish: item.finish! }));
+    }
+  };
+
+  const catalogSrc =
+    catalogId === "hero"
+      ? RELICARIO_HERO.src
+      : catalogId === "llavero-ref"
+        ? "/relicario-llavero-referencia.png"
+        : catalogId === "llavero"
+          ? RELICARIO_LLAVERO.src
+          : overlaySrc(finish);
+  const showResultOnMain =
+    Boolean(result) &&
+    (viewingLlavero || catalogId === "dorado" || catalogId === "plateado");
 
   const downloadResult = async () => {
     const src = (await composeCurrent()) ?? preview ?? result;
@@ -327,43 +561,106 @@ export default function RelicarioPreview() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="relative overflow-hidden rounded-2xl bg-zinc-50">
-        {result ? (
-          <img
-            src={result}
-            alt="Tu foto en el relicario"
-            className="h-full w-full bg-white object-contain"
-          />
-        ) : (
+      <div className="flex flex-col gap-2">
+        <div className="relative aspect-[3/2] overflow-hidden rounded-2xl bg-white">
           <Image
-            src={RELICARIO_HERO.src}
-            alt="Relicario de plata"
-            width={RELICARIO_HERO.width}
-            height={RELICARIO_HERO.height}
+            src={catalogSrc}
+            alt={
+              viewingLlavero
+                ? "Llavero de acero inoxidable"
+                : catalogId === "hero"
+                  ? "Relicario dorado puesto"
+                  : `Relicario ${finish}`
+            }
+            width={
+              catalogId === "hero" ? RELICARIO_HERO.width : RELICARIO.width
+            }
+            height={
+              catalogId === "hero" ? RELICARIO_HERO.height : RELICARIO.height
+            }
             preload
-            className="h-full w-full object-cover"
+            className={`pointer-events-none absolute inset-0 h-full w-full object-contain transition-opacity duration-700 ease-out ${
+              showResultOnMain && heroIn ? "opacity-0" : "opacity-100"
+            }`}
           />
-        )}
+          {showResultOnMain && result ? (
+            <img
+              src={result}
+              alt={
+                viewingLlavero
+                  ? "Tu foto en el llavero"
+                  : "Tu foto en el relicario"
+              }
+              className={`pointer-events-none absolute inset-0 h-full w-full bg-white object-contain transition-all duration-700 ease-out ${
+                heroIn ? "scale-100 opacity-100" : "scale-[1.04] opacity-0"
+              }`}
+            />
+          ) : null}
+        </div>
+
+        <div className="flex gap-1.5">
+          {LANDING_GALLERY.map((item) => {
+            const active = catalogId === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => pickGallery(item)}
+                aria-pressed={active}
+                className="flex w-14 flex-col gap-0.5 text-left"
+              >
+                <span
+                  className={`relative aspect-square overflow-hidden rounded-lg border bg-white ${
+                    active
+                      ? "border-zinc-900 ring-1 ring-zinc-900/15"
+                      : "border-zinc-200 hover:border-zinc-400"
+                  }`}
+                >
+                  <Image
+                    src={item.src}
+                    alt=""
+                    fill
+                    sizes="56px"
+                    className="object-contain"
+                  />
+                </span>
+                <span
+                  className={`text-[10px] leading-tight ${
+                    active ? "font-semibold text-zinc-900" : "text-zinc-500"
+                  }`}
+                >
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="flex gap-3">
-        <button
-          onClick={() => {
-            setPreview(result);
-            setError(null);
-            setOpen(true);
-          }}
-          className="flex-1 rounded-full border border-zinc-300 px-6 py-3 font-semibold text-zinc-800 transition-colors hover:border-zinc-500"
+      {result ? (
+        <div
+          className={`flex flex-col gap-3 transition-all duration-700 ease-out ${
+            heroIn ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
+          }`}
         >
-          {result ? "Cambiar foto" : "Simular con tu foto"}
-        </button>
-        {result && (
-          <>
+          <button
+            onClick={goToBuy}
+            className="w-full rounded-full bg-zinc-900 px-6 py-3.5 font-semibold text-white transition-colors hover:bg-zinc-700"
+          >
+            Comprar este relicario · {formatClp(totals.total)}
+          </button>
+          <div className="flex items-center justify-center gap-4 text-sm">
+            <button
+              onClick={openModal}
+              className="font-medium text-zinc-700 underline-offset-4 transition-colors hover:text-zinc-900 hover:underline"
+            >
+              Cambiar foto
+            </button>
             <button
               onClick={downloadResult}
-              className="flex-1 rounded-full bg-zinc-900 px-6 py-3 font-semibold text-white transition-colors hover:bg-zinc-700"
+              className="font-medium text-zinc-500 underline-offset-4 transition-colors hover:text-zinc-800 hover:underline"
             >
-              Descargar resultado
+              Descargar
             </button>
             <button
               onClick={() => {
@@ -377,36 +674,78 @@ export default function RelicarioPreview() {
                 setPan({ x: 0, y: 0 });
                 setResult(null);
                 setPreview(null);
+                setRevealTick(0);
                 setDebugInfo(null);
                 setDebugOverlay(null);
+                setLlaveroPreview((current) => {
+                  if (current) URL.revokeObjectURL(current);
+                  return null;
+                });
+                if (catalogId === "llavero" || catalogId === "llavero-ref") {
+                  setCatalogId(finish);
+                }
               }}
-              className="rounded-full px-4 py-3 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-800"
+              className="font-medium text-zinc-400 underline-offset-4 transition-colors hover:text-zinc-700 hover:underline"
             >
               Quitar
             </button>
-          </>
-        )}
-      </div>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={openModal}
+          className="w-full rounded-full border border-zinc-300 px-6 py-3 font-semibold text-zinc-800 transition-colors hover:border-zinc-500"
+        >
+          Simular con tu foto
+        </button>
+      )}
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 transition-opacity duration-200 ${
+            modalIn ? "opacity-100" : "opacity-0"
+          }`}
           onClick={close}
         >
           <div
-            className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white p-6 shadow-xl"
+            className={`flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white p-6 shadow-xl transition-all duration-200 ${
+              modalIn ? "scale-100 opacity-100" : "scale-[0.98] opacity-0"
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-xl font-bold tracking-tight">
-              {photo || preview ? "Tu relicario" : "Sube tu foto"}
-            </h2>
-            <p className="mt-1 text-sm text-zinc-500">
-              {loading
-                ? LOADING_STAGES[loadingStage]
-                : photo
-                  ? "Arrastra la foto para moverla. Usa + / − para agrandar o achicar."
-                  : "Sube una foto. La encuadramos en el corazón y después la puedes ajustar."}
-            </p>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight">
+                  {photo || preview ? "Tu relicario" : "Sube tu foto"}
+                </h2>
+                <p className="mt-1 text-sm text-zinc-500">
+                  {loading
+                    ? LOADING_STAGES[loadingStage]
+                    : photo
+                      ? "Arrastra la foto para moverla. Usa + / − para agrandar o achicar."
+                      : "Sube una foto. La encuadramos en el corazón y después la puedes ajustar."}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={close}
+                disabled={loading}
+                className="-mr-1 -mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-800 disabled:opacity-40"
+                aria-label="Cerrar"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  aria-hidden
+                >
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </button>
+            </div>
 
             <input
               ref={inputRef}
@@ -419,7 +758,7 @@ export default function RelicarioPreview() {
             {loading ? (
               <div className="relative mt-4 overflow-hidden rounded-xl bg-white">
                 <img
-                  src={RELICARIO.src}
+                  src={overlaySrc(finish)}
                   alt="Generando relicario"
                   className="max-h-[50vh] w-full object-contain opacity-80"
                 />
@@ -527,6 +866,15 @@ export default function RelicarioPreview() {
           </div>
         </div>
       )}
+
+      <LlaveroUpsellModal
+        open={upsellOpen}
+        image={llaveroPreview}
+        alreadyFreeShipping={totals.gratis}
+        onAdd={() => finishUpsell(true)}
+        onSkip={() => finishUpsell(false)}
+        onClose={() => setUpsellOpen(false)}
+      />
     </div>
   );
 }

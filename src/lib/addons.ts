@@ -1,5 +1,7 @@
 export const RELICARIO_PRECIO = 34_990;
 export const RELICARIO_PRECIO_TACHADO = 49_990;
+export const LLAVERO_ADDON_ID = "llavero";
+export const LLAVERO_PRECIO = 8_990;
 
 export type Addon = {
   id: string;
@@ -9,14 +11,14 @@ export type Addon = {
   conflictsWith?: readonly string[];
 };
 
-export type RelicarioVersion = {
-  id: string;
-  name: string;
-  blurb: string;
-};
-
 /** Precio de vitrina, dentro del rango de cada extra. */
 export const ADDONS: readonly Addon[] = [
+  {
+    id: LLAVERO_ADDON_ID,
+    name: "Llavero con tu foto",
+    description: "La misma foto, lista en un llavero de acero inoxidable.",
+    price: LLAVERO_PRECIO,
+  },
   {
     id: "segunda-foto",
     name: "Segunda foto",
@@ -64,39 +66,6 @@ export const ADDONS: readonly Addon[] = [
   },
 ] as const;
 
-export const VERSIONES: readonly RelicarioVersion[] = [
-  {
-    id: "clasica",
-    name: "Clásica",
-    blurb: "Sube tu foto y mírala dentro del relicario. Pieza única hecha a mano, perfecta para guardar lo más valioso o para regalar.",
-  },
-  {
-    id: "memorial",
-    name: "Memorial",
-    blurb: "Presentación más sobria para recordar a un familiar o a una mascota. El relicario es el mismo; cambia el tono de la caja y la tarjeta.",
-  },
-  {
-    id: "pareja",
-    name: "Pareja",
-    blurb: "El mismo relicario, con packaging, tarjeta y mensaje pensados para dos.",
-  },
-  {
-    id: "madre",
-    name: "Madre",
-    blurb: "El mismo relicario, con packaging y tarjeta para mamá.",
-  },
-  {
-    id: "hija",
-    name: "Hija",
-    blurb: "El mismo relicario, con packaging y tarjeta para una hija.",
-  },
-  {
-    id: "mascota",
-    name: "Mascota",
-    blurb: "El mismo relicario, con packaging y tarjeta para recordar a tu mascota.",
-  },
-] as const;
-
 export function toggleAddon(
   selected: readonly string[],
   id: string,
@@ -132,8 +101,4 @@ export function formatClp(value: number) {
     .toString()
     .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   return `${sign}$${grouped}`;
-}
-
-export function versionById(id: string) {
-  return VERSIONES.find((item) => item.id === id) ?? VERSIONES[0];
 }

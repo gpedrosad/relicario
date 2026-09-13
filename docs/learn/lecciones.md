@@ -4,7 +4,7 @@ Cosas ya pagadas. No volver a descubrirlas.
 
 ## Deploy / build
 
-- **2026-09 — Path dinámico a `reli.png`.** `path.join(process.cwd(), RELICARIO.file)` hizo que Turbopack trazara todo el repo (incluido `public/`) y Vercel cortara el build. Literales `public`, `reli.png` + `outputFileTracingIncludes` en el route de enhance.
+- **2026-09 — Path dinámico al PNG del colgante.** `path.join(process.cwd(), RELICARIO.file)` hizo que Turbopack trazara todo el repo (incluido `public/`) y Vercel cortara el build. Literales `public`, `relicario-colgante.png` + `outputFileTracingIncludes` en el route de enhance.
 - **2026-09 — `title` en `<rect>`.** React/TS no acepta `title` como prop de SVG. Tooltip = `<title>` hijo, o solo `aria-label`.
 - **2026-09 — Hydration del dashboard.** Un `<title>` en el SVG raíz y `Intl` no determinista rompían el primer paint. `clp` / `%` fijos, sin `title` de documento dentro del chart.
 
@@ -18,7 +18,7 @@ Cosas ya pagadas. No volver a descubrirlas.
 - Blur / viñeta / escena expandida se leen como un recorte. El hueco pide la foto encuadrada, nítida, con su fondo.
 - Encajar **personas enteras** en la zona ancha. Recortar caras o el grupo se ve mal en el corazón.
 - `coverScale` extra recorta la coronilla contra la hendidura de oro. El canvas ya es el ratio del hueco.
-- No usar `imagenrelicario.png` para composite.
+- No usar `relicario-legacy-sin-alpha.png` para composite.
 
 ## Negocio
 

@@ -1,28 +1,45 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useProjectLocal } from "@/components/ProjectLocalProvider";
 import {
   ADDONS,
+  LLAVERO_ADDON_ID,
   RELICARIO_PRECIO,
   RELICARIO_PRECIO_TACHADO,
-  VERSIONES,
   addonsTotal,
   formatClp,
   toggleAddon,
-  versionById,
 } from "@/lib/addons";
+import { checkoutTotals, ENVIO_GRATIS_DESDE, requestCheckout } from "@/lib/checkout";
+import {
+  FINISHES,
+  FINISH_LABEL,
+  type RelicarioFinish,
+} from "@/lib/relicario-finish";
 
 export default function ProductPurchase() {
   const { tienda, setTienda } = useProjectLocal();
   const selected = tienda.selected;
-  const versionId = tienda.versionId;
-  const version = versionById(versionId);
   const extras = useMemo(() => addonsTotal(selected), [selected]);
-  const total = RELICARIO_PRECIO + extras;
+  const subtotal = RELICARIO_PRECIO + extras;
+  const { envio, gratis, falta, total } = checkoutTotals({ selected });
   const discount = Math.round(
     (1 - RELICARIO_PRECIO / RELICARIO_PRECIO_TACHADO) * 100,
   );
+
+  const router = useRouter();
+  const [buyPulse, setBuyPulse] = useState(false);
+
+  useEffect(() => {
+    const onFocus = () => {
+      setBuyPulse(true);
+      window.setTimeout(() => setBuyPulse(false), 1400);
+    };
+    window.addEventListener("relicario:focus-buy", onFocus);
+    return () => window.removeEventListener("relicario:focus-buy", onFocus);
+  }, []);
 
   const onToggle = (id: string) => {
     setTienda((current) => ({
@@ -31,18 +48,27 @@ export default function ProductPurchase() {
     }));
   };
 
+  const setFinish = (finish: RelicarioFinish) => {
+    setTienda((current) =>
+      current.finish === finish ? current : { ...current, finish },
+    );
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="mt-2 text-4xl font-bold tracking-tight">
-          Relicario de plata
+          Relicario de acero inoxidable
         </h1>
       </div>
 
-      <p className="text-lg leading-relaxed text-zinc-600">{version.blurb}</p>
+      <p className="text-lg leading-relaxed text-zinc-600">
+        Sube tu foto y mírala dentro del relicario. Pieza única hecha a mano,
+        perfecta para guardar lo más valioso o para regalar.
+      </p>
 
       <div className="flex flex-wrap items-baseline gap-3">
-        <span className="text-4xl font-bold">{formatClp(total)}</span>
+        <span className="text-4xl font-bold">{formatClp(subtotal)}</span>
         {extras === 0 ? (
           <>
             <span className="text-lg text-zinc-400 line-through">
@@ -60,42 +86,82 @@ export default function ProductPurchase() {
       </div>
 
       <ul className="flex flex-col gap-2 text-sm text-zinc-600">
-        <li>✓ Plata de ley 925</li>
-        <li>✓ Envío gratis en 24-48h</li>
+        <li>✓ Acero inoxidable · dorado o plateado</li>
+        <li>
+          {gratis
+            ? "✓ Envío gratis desbloqueado"
+            : `Envío ${formatClp(envio)} · gratis desde ${formatClp(ENVIO_GRATIS_DESDE)}`}
+        </li>
         <li>✓ Devolución garantizada 30 días</li>
       </ul>
 
-      <section id="extras" className="flex flex-col gap-4">
+      <div
+        className={`rounded-2xl px-4 py-3 text-sm ${
+          gratis
+            ? "bg-emerald-50 text-emerald-800"
+            : "bg-zinc-50 text-zinc-600"
+        }`}
+      >
+        {gratis ? (
+          <p className="font-medium">Envío gratis en este pedido.</p>
+        ) : (
+          <>
+            <p>
+              Te faltan <span className="font-semibold">{formatClp(falta)}</span>{" "}
+              para envío gratis. Súmale extras.
+            </p>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-zinc-200">
+              <div
+                className="h-full rounded-full bg-zinc-900"
+                style={{
+                  width: `${Math.min(100, (subtotal / ENVIO_GRATIS_DESDE) * 100)}%`,
+                }}
+              />
+            </div>
+          </>
+        )}
+      </div>
+
+      <section className="flex flex-col gap-3">
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
-            Versión
+            Acabado
           </h2>
           <p className="mt-1 text-sm text-zinc-500">
-            Mismo relicario. Cambia el packaging, la tarjeta y el tono.
+            Mismo relicario. Elige el color del metal.
           </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {VERSIONES.map((item) => {
-              const active = item.id === versionId;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() =>
-                    setTienda((current) => ({ ...current, versionId: item.id }))
-                  }
-                  className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
-                    active
-                      ? "bg-zinc-900 text-white"
-                      : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
-                  }`}
-                >
-                  {item.name}
-                </button>
-              );
-            })}
-          </div>
         </div>
+        <div className="flex gap-2">
+          {FINISHES.map((id) => {
+            const active = tienda.finish === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setFinish(id)}
+                aria-pressed={active}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition-colors ${
+                  active
+                    ? "border-zinc-900 bg-zinc-900 text-white"
+                    : "border-zinc-200 text-zinc-700 hover:border-zinc-400"
+                }`}
+              >
+                <span
+                  className="size-4 rounded-full border border-black/10"
+                  style={{
+                    background:
+                      id === "dorado" ? "#c4a35a" : "#c8ccd0",
+                  }}
+                  aria-hidden
+                />
+                {FINISH_LABEL[id]}
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
+      <section id="extras" className="flex flex-col gap-4">
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
             Extras
@@ -104,7 +170,8 @@ export default function ProductPurchase() {
             Súmale lo que quieras. El pack regalo reemplaza caja y tarjeta sueltas.
           </p>
           <ul className="mt-3 divide-y divide-zinc-100 rounded-2xl border border-zinc-200">
-            {ADDONS.map((addon) => {
+            {ADDONS.filter((addon) => addon.id !== LLAVERO_ADDON_ID).map(
+              (addon) => {
               const checked = selected.includes(addon.id);
               return (
                 <li key={addon.id}>
@@ -137,10 +204,20 @@ export default function ProductPurchase() {
       </section>
 
       <div id="comprar" className="flex flex-col gap-3 sm:flex-row">
-        <button className="flex-1 rounded-full bg-zinc-900 px-8 py-4 font-semibold text-white transition-colors hover:bg-zinc-700">
+        <button
+          type="button"
+          onClick={() => requestCheckout("comprar", (href) => router.push(href))}
+          className={`flex-1 rounded-full bg-zinc-900 px-8 py-4 font-semibold text-white transition-all duration-500 hover:bg-zinc-700 ${
+            buyPulse ? "scale-[1.02] ring-4 ring-zinc-900/20" : "scale-100 ring-0"
+          }`}
+        >
           Comprar ahora · {formatClp(total)}
         </button>
-        <button className="flex-1 rounded-full border border-zinc-200 px-8 py-4 font-semibold transition-colors hover:border-zinc-400">
+        <button
+          type="button"
+          onClick={() => requestCheckout("carrito", (href) => router.push(href))}
+          className="flex-1 rounded-full border border-zinc-200 px-8 py-4 font-semibold transition-colors hover:border-zinc-400"
+        >
           Añadir al carrito
         </button>
       </div>

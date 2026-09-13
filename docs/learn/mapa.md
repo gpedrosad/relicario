@@ -1,6 +1,6 @@
 # Mapa
 
-Landing de Relicario (plata, foto en el corazón), simulador con Replicate y tablero de costos.
+Landing de Relicario (acero inoxidable, foto en el corazón), simulador con Replicate y tablero de costos.
 
 Repo: [gpedrosad/relicario](https://github.com/gpedrosad/relicario). App: Next.js 16 (Turbopack) en Vercel. Persistencia de supuestos: `localStorage` (`relicario.local.v1`). Fotos del simulador no se persisten.
 
@@ -9,6 +9,7 @@ Repo: [gpedrosad/relicario](https://github.com/gpedrosad/relicario). App: Next.j
 | Ruta | Qué es |
 | --- | --- |
 | `/` | Tienda + `RelicarioPreview` + `ProductPurchase` |
+| `/checkout` | Front de Shopify. Noindex. No cobra. Entrada: `?from=wow\|comprar\|carrito` |
 | `/costos` | Tablero. Noindex |
 | `POST /api/relicario/enhance` | Detecta caras y devuelve el crop; el cliente compone y permite arrastrar/zoom |
 
@@ -16,17 +17,21 @@ Repo: [gpedrosad/relicario](https://github.com/gpedrosad/relicario). App: Next.j
 
 | Pieza | Path |
 | --- | --- |
-| Spec del PNG | `src/lib/relicario-spec.ts` |
-| Máscara / hueco | `src/lib/relicario-mask.ts` — path literales `public/reli.png` |
+| Acabado / galería | `src/lib/relicario-finish.ts` — dorado o plateado; thumbs de `public/` |
+| Spec del PNG | `src/lib/relicario-spec.ts` — overlay relicario; llavero en modal al comprar |
+| Máscara / hueco | `src/lib/relicario-mask.ts` — path literales `public/relicario-llavero.png` |
 | IA | `src/lib/replicate.ts` — Bria solo para ubicar caras; cover local |
+| Funnel / eventos (PostHog) | [docs/funnel-landing.md](../funnel-landing.md) |
 | Costos | `src/lib/costos.ts` |
 | Pedido China | `src/lib/pedido-china.ts` — 50 piezas + extras del primer vuelo |
-| Extras / versiones | `src/lib/addons.ts` — mismo metal, cambia packaging |
+| Extras / versiones | `src/lib/addons.ts` — llavero $8.990; resto packaging |
+| Envío / umbral | `src/lib/checkout.ts` — $2.000 o gratis desde $42.990. Opciones: [envio-gratis-ticket.md](envio-gratis-ticket.md) |
+| Checkout (front) | `src/lib/checkout.ts`, `ShopifyCheckout` |
 | Local | `src/lib/local-project.ts`, `ProjectLocalProvider` |
 
 ## Aún no está
 
-Checkout real (Shopify). WhatsApp / Kapso. Banner de cookies. Política de privacidad. Pixel Meta. Los botones Comprar / Carrito no cobran.
+Checkout real (Shopify cobra; `/checkout` es solo el front para marcar el momento). WhatsApp / Kapso. Banner de cookies. Política de privacidad. Pixel Meta.
 
 ## Entorno
 

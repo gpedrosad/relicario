@@ -8,7 +8,7 @@ Estimación en CLP, septiembre 2026. **La base del análisis es sin IVA (19%)**.
 | --- | --- | --- |
 | Ticket de trabajo | $34.990 | Landing actual. Se compara con otros tickets en §5. |
 | Pieza | $4.500 | Confirmado, puesto en Chile |
-| Envío cobrado al cliente | $2.000 plano | Decidido |
+| Envío cobrado al cliente | $2.000 bajo $42.990; $0 desde $42.990 | Decidido 2026-09-13. Ver `docs/learn/envio-gratis-ticket.md` |
 | Courier que pagamos | $4.000 promedio | Decidido. Neto envío: **$2.000** |
 | Empaque | $1.500 | Decidido |
 | Comisión de cobro | **5,8%** sobre ticket + envío | Shopify 2% (pasarela externa) + Mercado Pago 3,19% + IVA ≈ 3,80% efectivo. |
@@ -42,7 +42,7 @@ utilidad = 24.080 − CPA
 quiebre  = CPA ≈ $24.100
 ```
 
-La landing todavía dice “envío gratis”. Si se cobra $2.000, hay que cambiar eso.
+La landing ya no dice envío gratis plano: $2.000 bajo $42.990, gratis al cruzar (llavero o ~$8.000 en extras).
 
 ---
 

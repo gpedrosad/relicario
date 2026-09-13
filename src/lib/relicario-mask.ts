@@ -15,7 +15,7 @@ let holePromise: Promise<HoleMask> | null = null;
 
 async function loadHole(): Promise<HoleMask> {
   // Literales: si el path es dinámico, Turbopack traza todo el repo en el server bundle.
-  const file = path.join(process.cwd(), "public", "reli.png");
+  const file = path.join(process.cwd(), "public", "relicario-colgante-plata.png");
   const { data, info } = await sharp(await readFile(file))
     .ensureAlpha()
     .raw()

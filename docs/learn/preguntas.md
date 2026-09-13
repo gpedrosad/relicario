@@ -8,5 +8,5 @@ Huecos. Cuando haya respuesta: mover a `decisiones.md` o `hipotesis.md` y borrar
 - ¿Texto final de casillas (foto / WhatsApp / cookies) revisado por abogado?
 - ¿DPA con Replicate y cláusula de no-entrenamiento, firmados?
 - ¿WABA + plantillas Kapso (“así te quedó”, “¿lo dejamos armado?”) aprobadas?
-- ¿Se alinea el copy de “envío gratis 24–48h” con el $2.000 cobrado?
 - ¿`/costos` queda en prod (noindex) o solo local?
+- ¿El umbral $42.990 (opción E) se sostiene cuando haya attach real, o conviene D ($40.990)? Ver `envio-gratis-ticket.md`.

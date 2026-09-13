@@ -8,13 +8,13 @@ La foto nítida se encaja en contain al mayor rectángulo del hueco. El resto de
 
 | Sistema | Dimensiones | Origen |
 | --- | --- | --- |
-| PNG del producto | 1536 × 1024 px | Esquina superior izquierda de `public/reli.png` |
+| PNG del producto | 1536 × 1024 px | Esquina superior izquierda de `public/relicario-colgante.png` |
 | Rectángulo que contiene el hueco | 551 × 492 px | `(847, 345)` en el PNG del producto |
 | Insert de trabajo | 1102 × 984 px | Esquina superior izquierda del rectángulo del hueco, a escala 2× |
 
 Todas las medidas siguientes son del **insert de trabajo**. Conversión al producto: `xPNG = 847 + xInsert / 2`, `yPNG = 345 + yInsert / 2`. No usar las medidas del producto como si fueran el área de la foto.
 
-El hueco es un corazón asimétrico, no un rectángulo. Su contorno se obtiene del canal alpha de `reli.png`. Los límites horizontales se recalculan por fila: la punta inferior y la hendidura central no son zonas seguras para caras.
+El hueco es un corazón asimétrico, no un rectángulo. Su contorno se obtiene del canal alpha de `relicario-colgante.png`. Los límites horizontales se recalculan por fila: la punta inferior y la hendidura central no son zonas seguras para caras.
 
 ## Dónde colocar a las personas
 

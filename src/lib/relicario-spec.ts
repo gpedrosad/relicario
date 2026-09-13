@@ -1,14 +1,17 @@
 /**
  * Especificaciones medidas de los assets del relicario.
- * Fuente de verdad para componer la foto del usuario sobre `reli.png`.
+ * Fuente de verdad para componer la foto. El hueco es el mismo en
+ * `relicario-colgante.png` (dorado) y `relicario-colgante-plata.png`.
+ * El llavero es un overlay aparte: misma foto, otro hueco.
  *
  * Coordenadas: origen (0, 0) arriba-izquierda. Unidades en píxeles.
- * Si se reemplaza `public/reli.png`, volver a medir el hueco y actualizar este archivo.
+ * Si se reemplaza el PNG del hueco, volver a medir y actualizar este archivo.
  */
 
 export const RELICARIO = {
-  src: "/reli.png",
-  file: "public/reli.png",
+  src: "/relicario-colgante-plata.png",
+  file: "public/relicario-colgante-plata.png",
+  doradoSrc: "/relicario-colgante.png",
   width: 1536,
   height: 1024,
   aspect: "3:2",
@@ -90,7 +93,7 @@ export const RELICARIO_REPLICATE = {
   upscaleModel: "",
   /**
    * Retrato canónico para CUALQUIER foto. Fracciones del canvas de salida.
-   * Medido en reli.png: el centro del hueco no existe hasta y≈428 (17% del alto).
+   * Medido en relicario-colgante.png: el centro del hueco no existe hasta y≈428 (17% del alto).
    * Ahí está la hendidura de oro; la cabeza tiene que quedar debajo.
    */
   heart: {
@@ -115,9 +118,30 @@ export const RELICARIO_REPLICATE = {
   /** Zonas: docs/relicario-areas.md. El hueco vacío es RELICARIO.paper. */
 } as const;
 
+/** Overlay del addon llavero. No es el simulador. */
+export const RELICARIO_LLAVERO = {
+  src: "/relicario-llavero.png",
+  file: "public/relicario-llavero.png",
+  width: 1536,
+  height: 1024,
+  hole: {
+    seedXRatio: 0.632,
+    seedYRatio: 0.703,
+    alphaCut: 16,
+    minX: 814,
+    minY: 599,
+    maxX: 1133,
+    maxY: 883,
+    width: 320,
+    height: 285,
+    pixels: 62_059,
+    centroid: { x: 970.5, y: 720.2 },
+  },
+} as const;
+
 export const RELICARIO_HERO = {
-  src: "/RELICARIO1.jpg",
-  file: "public/RELICARIO1.jpg",
+  src: "/relicario-hero.jpg",
+  file: "public/relicario-hero.jpg",
   width: 1024,
   height: 1024,
   format: "jpeg",
@@ -125,8 +149,8 @@ export const RELICARIO_HERO = {
 
 /** No usar para composite: no tiene canal alpha; el hueco es un damero rasterizado. */
 export const RELICARIO_LEGACY = {
-  src: "/imagenrelicario.png",
-  file: "public/imagenrelicario.png",
+  src: "/relicario-legacy-sin-alpha.png",
+  file: "public/relicario-legacy-sin-alpha.png",
   width: 1536,
   height: 1024,
   hasAlpha: false,

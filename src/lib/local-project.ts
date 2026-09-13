@@ -1,11 +1,16 @@
-import { ADDONS, VERSIONES } from "@/lib/addons";
+import { ADDONS } from "@/lib/addons";
 import { aplicarFunnel, COSTOS_DEFAULT, type CostosInput } from "@/lib/costos";
+import {
+  FINISH_DEFAULT,
+  isRelicarioFinish,
+  type RelicarioFinish,
+} from "@/lib/relicario-finish";
 
 export const LOCAL_PROJECT_KEY = "relicario.local.v1";
 
 export type TiendaLocal = {
   selected: string[];
-  versionId: string;
+  finish: RelicarioFinish;
 };
 
 export type LocalProject = {
@@ -15,7 +20,7 @@ export type LocalProject = {
 
 export const TIENDA_DEFAULT: TiendaLocal = {
   selected: [],
-  versionId: VERSIONES[0].id,
+  finish: FINISH_DEFAULT,
 };
 
 export const LOCAL_PROJECT_DEFAULT: LocalProject = {
@@ -24,7 +29,6 @@ export const LOCAL_PROJECT_DEFAULT: LocalProject = {
 };
 
 const ADDON_IDS = new Set(ADDONS.map((item) => item.id));
-const VERSION_IDS = new Set(VERSIONES.map((item) => item.id));
 const COSTOS_KEYS = Object.keys(COSTOS_DEFAULT) as (keyof CostosInput)[];
 
 function isFiniteNumber(value: unknown): value is number {
@@ -48,11 +52,10 @@ export function parseTienda(raw: unknown): TiendaLocal {
   const selected = Array.isArray(saved.selected)
     ? saved.selected.filter((id): id is string => typeof id === "string" && ADDON_IDS.has(id))
     : [];
-  const versionId =
-    typeof saved.versionId === "string" && VERSION_IDS.has(saved.versionId)
-      ? saved.versionId
-      : TIENDA_DEFAULT.versionId;
-  return { selected, versionId };
+  return {
+    selected,
+    finish: isRelicarioFinish(saved.finish) ? saved.finish : FINISH_DEFAULT,
+  };
 }
 
 export function parseLocalProject(raw: unknown): LocalProject {

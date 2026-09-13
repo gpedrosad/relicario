@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Relicario — Joyería artesanal",
-  description: "Relicario de plata hecho a mano. Pieza única.",
+  description: "Relicario de acero inoxidable hecho a mano. Pieza única.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RELICARIO } from "@/lib/relicario-spec";
 import {
   PHOTO_EDIT,
@@ -13,6 +13,24 @@ import {
 } from "@/lib/relicario-pan";
 
 type HoleMask = PhotoHole & { canvas: HTMLCanvasElement };
+
+let hintDismissed = false;
+
+function MoveIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-3.5 w-3.5 shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden
+    >
+      <path d="M12 3v18M3 12h18M8 7l4-4 4 4M8 17l4 4 4-4M7 8l-4 4 4 4M17 8l4 4-4 4" />
+    </svg>
+  );
+}
 
 type Props = {
   photo: ImageBitmap;
@@ -88,6 +106,7 @@ export default function RelicarioPhotoEditor({
     scale: number;
   } | null>(null);
   const pointersRef = useRef(new Map<number, { x: number; y: number }>());
+  const [showHint, setShowHint] = useState(false);
   const scaleRef = useRef(scale);
   scaleRef.current = scale;
   const panRef = useRef(pan);
@@ -110,6 +129,15 @@ export default function RelicarioPhotoEditor({
     canvas.height = RELICARIO.height;
     paint(canvas, photo, base, hole, crop, scale, pan);
   }, [photo, base, hole, crop, scale, pan]);
+
+  useEffect(() => {
+    if (hintDismissed) return;
+    setShowHint(false);
+    const timer = window.setTimeout(() => {
+      if (!hintDismissed) setShowHint(true);
+    }, 2000);
+    return () => window.clearTimeout(timer);
+  }, [photo]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -167,6 +195,13 @@ export default function RelicarioPhotoEditor({
     }
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
+    if (
+      showHint &&
+      Math.hypot(point.x - drag.x, point.y - drag.y) > 10
+    ) {
+      hintDismissed = true;
+      setShowHint(false);
+    }
     onTransform({
       scale,
       pan: clampPan(photo.width, photo.height, hole, crop, scale, {
@@ -182,17 +217,42 @@ export default function RelicarioPhotoEditor({
     if (pinchRef.current?.ids.includes(event.pointerId)) pinchRef.current = null;
   };
 
+  const holeLeft =
+    ((RELICARIO.hole.minX + RELICARIO.hole.width / 2) / RELICARIO.width) * 100;
+  const holeTop =
+    ((RELICARIO.hole.minY + RELICARIO.hole.height / 2) / RELICARIO.height) * 100;
+
   return (
     <div className="mt-4">
-      <canvas
-        ref={canvasRef}
-        className="max-h-[36vh] w-full cursor-grab touch-none rounded-xl bg-white object-contain active:cursor-grabbing"
-        style={{ aspectRatio: `${RELICARIO.width} / ${RELICARIO.height}` }}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endPointer}
-        onPointerCancel={endPointer}
-      />
+      <div className="flex justify-center">
+        <div
+          className="relative w-full max-h-[36vh]"
+          style={{
+            aspectRatio: `${RELICARIO.width} / ${RELICARIO.height}`,
+            maxWidth: "min(100%, calc(36vh * 1.5))",
+          }}
+        >
+          <canvas
+            ref={canvasRef}
+            className="h-full w-full cursor-grab touch-none rounded-xl bg-white active:cursor-grabbing"
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={endPointer}
+            onPointerCancel={endPointer}
+          />
+          {showHint && (
+            <div
+              className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2"
+              style={{ left: `${holeLeft}%`, top: `${holeTop}%` }}
+            >
+              <div className="flex items-center gap-1.5 rounded-full bg-zinc-900/90 px-3 py-1.5 text-xs font-medium text-white shadow-lg">
+                <MoveIcon />
+                Arrastra para ajustar
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
       <div className="mt-3 flex items-center justify-center gap-3">
         <button
           type="button"

@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   serverExternalPackages: ["sharp", "replicate"],
   outputFileTracingIncludes: {
-    "/api/relicario/enhance": ["./public/reli.png"],
+    "/api/relicario/enhance": ["./public/relicario-colgante-plata.png"],
   },
 };
 
