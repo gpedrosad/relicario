@@ -104,6 +104,13 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   background: #d4d4d8;
 }
 
+.product-gallery-scroll {
+  scrollbar-width: none;
+  overscroll-behavior-inline: contain;
+}
+
+.product-gallery-scroll::-webkit-scrollbar { display: none; }
+
 @keyframes upsell-backdrop-in {
   from { opacity: 0; }
   to { opacity: 1; }

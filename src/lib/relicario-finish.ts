@@ -12,6 +12,7 @@ export const RELICARIO_DORADO_SRC = "/relicario-colgante.png";
 export const RELICARIO_PLATA_SRC = "/relicario-colgante-plata.png";
 export const RELICARIO_DORADO_EDITORIAL_SRC = "/images/relicario-dorado-editorial-wide.png";
 export const RELICARIO_PLATA_EDITORIAL_SRC = "/images/relicario-plateado-editorial-wide.png";
+export const RELICARIO_LIFESTYLE_SQUARE_SRC = "/images/relicario-lifestyle-cuadrado.png";
 
 export function isRelicarioFinish(value: unknown): value is RelicarioFinish {
   return value === "dorado" || value === "plateado";
@@ -30,11 +31,6 @@ export type GalleryItem = {
 
 export const LANDING_GALLERY: readonly GalleryItem[] = [
   {
-    id: "hero",
-    src: "/relicario-hero.jpg",
-    label: "Puesto",
-  },
-  {
     id: "dorado",
     src: RELICARIO_DORADO_EDITORIAL_SRC,
     label: "Dorado",
@@ -45,5 +41,10 @@ export const LANDING_GALLERY: readonly GalleryItem[] = [
     src: RELICARIO_PLATA_EDITORIAL_SRC,
     label: "Plateado",
     finish: "plateado",
+  },
+  {
+    id: "lifestyle",
+    src: RELICARIO_LIFESTYLE_SQUARE_SRC,
+    label: "En uso",
   },
 ];

@@ -7,10 +7,11 @@ import RelicarioPhotoEditor, {
   exportRelicarioEdit,
 } from "@/components/RelicarioPhotoEditor";
 import LlaveroUpsellModal from "@/components/LlaveroUpsellModal";
-import { RELICARIO, RELICARIO_HERO, RELICARIO_LLAVERO } from "@/lib/relicario-spec";
+import { RELICARIO, RELICARIO_LLAVERO } from "@/lib/relicario-spec";
 import type { PhotoBox, PhotoPan } from "@/lib/relicario-pan";
 import {
   LANDING_GALLERY,
+  RELICARIO_LIFESTYLE_SQUARE_SRC,
   overlaySrc,
   type GalleryItem,
 } from "@/lib/relicario-finish";
@@ -237,7 +238,8 @@ export default function RelicarioPreview() {
   const { tienda, setTienda } = useProjectLocal();
   const finish = tienda.finish;
   const showLlavero = tienda.selected.includes(LLAVERO_ADDON_ID);
-  const [catalogId, setCatalogId] = useState("hero");
+  const [catalogId, setCatalogId] = useState<string>(finish);
+  const [mobileSlide, setMobileSlide] = useState(0);
   const viewingLlavero = catalogId === "llavero" || catalogId === "llavero-ref";
   const totals = checkoutTotals(tienda);
   const [result, setResult] = useState<string | null>(null);
@@ -265,6 +267,7 @@ export default function RelicarioPreview() {
   const [scale, setScale] = useState(1);
   const [pan, setPan] = useState<PhotoPan>({ x: 0, y: 0 });
   const inputRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLDivElement>(null);
   const exportTimer = useRef<number>(0);
   const prevFinish = useRef(finish);
   const router = useRouter();
@@ -548,6 +551,30 @@ export default function RelicarioPreview() {
     }
   };
 
+  const updateMobileSlide = () => {
+    const gallery = galleryRef.current;
+    if (!gallery) return;
+
+    const cards = Array.from(gallery.children).filter(
+      (child): child is HTMLButtonElement => child instanceof HTMLButtonElement,
+    );
+    const nearest = cards.reduce(
+      (best, card, index) =>
+        Math.abs(card.offsetLeft - gallery.scrollLeft) < best.distance
+          ? { index, distance: Math.abs(card.offsetLeft - gallery.scrollLeft) }
+          : best,
+      { index: 0, distance: Number.POSITIVE_INFINITY },
+    );
+    setMobileSlide(nearest.index);
+  };
+
+  const goToMobileSlide = (index: number) => {
+    const card = galleryRef.current?.children[index];
+    if (!(card instanceof HTMLElement)) return;
+    galleryRef.current?.scrollTo({ left: card.offsetLeft, behavior: "smooth" });
+    setMobileSlide(index);
+  };
+
   const selectedGalleryItem = LANDING_GALLERY.find(
     (item) => item.id === catalogId,
   );
@@ -556,7 +583,7 @@ export default function RelicarioPreview() {
         ? "/relicario-llavero-referencia.png"
         : catalogId === "llavero"
           ? "/images/relicario-llavero-editorial.png"
-          : selectedGalleryItem?.src ?? RELICARIO_HERO.src;
+          : selectedGalleryItem?.src ?? LANDING_GALLERY[0].src;
   const showResultOnMain =
     Boolean(result) &&
     (viewingLlavero || catalogId === "dorado" || catalogId === "plateado");
@@ -571,26 +598,81 @@ export default function RelicarioPreview() {
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <div className="relative aspect-[3/2] overflow-hidden bg-white">
+    <div className="flex min-w-0 flex-col gap-4">
+      <div>
+        <div className="relative -ml-4 w-screen editorial:hidden">
+          <div
+            ref={galleryRef}
+            onScroll={updateMobileSlide}
+            className="product-gallery-scroll flex w-full snap-x snap-mandatory gap-1 overflow-x-auto"
+            aria-label="Galería del producto"
+          >
+          {LANDING_GALLERY.map((item) => {
+            const active = catalogId === item.id;
+            const showResultOnCard = Boolean(result) && active;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => pickGallery(item)}
+                aria-pressed={active}
+                aria-label={`Ver relicario ${item.label.toLowerCase()}`}
+                className="relative aspect-square w-[88vw] shrink-0 snap-start overflow-hidden bg-[var(--color-cream)] text-left first:ml-0 last:mr-[12vw]"
+              >
+                <Image
+                  src={item.src}
+                  alt={`Relicario ${item.label.toLowerCase()}`}
+                  fill
+                  sizes="88vw"
+                  preload={item.id === LANDING_GALLERY[0].id}
+                  className={`pointer-events-none object-cover transition-opacity duration-700 ease-out ${
+                    showResultOnCard && heroIn ? "opacity-0" : "opacity-100"
+                  }`}
+                />
+                {showResultOnCard && result ? (
+                  <img
+                    src={result}
+                    alt={`Tu foto en el relicario ${item.label.toLowerCase()}`}
+                    className={`pointer-events-none absolute inset-0 h-full w-full bg-white object-contain transition-all duration-700 ease-out ${
+                      heroIn ? "scale-100 opacity-100" : "scale-[1.04] opacity-0"
+                    }`}
+                  />
+                ) : null}
+                <span className="absolute bottom-4 left-4 border border-black/10 bg-white/90 px-3 py-2 font-display text-[10px] tracking-[0.15em] uppercase backdrop-blur">
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+          </div>
+          <div className="pointer-events-none absolute inset-x-0 bottom-5 flex justify-center gap-2" aria-label="Posición en la galería">
+            {LANDING_GALLERY.map((item, index) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => goToMobileSlide(index)}
+                aria-label={`Ver imagen ${index + 1}`}
+                aria-current={mobileSlide === index ? "true" : undefined}
+                className={`pointer-events-auto size-2 rounded-full border border-white/90 shadow-sm transition-colors ${
+                  mobileSlide === index ? "bg-white" : "bg-black/25"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="relative hidden aspect-[3/2] overflow-hidden bg-white editorial:block">
           <Image
             src={catalogSrc}
             alt={
               viewingLlavero
                 ? "Llavero de acero inoxidable"
-                : catalogId === "hero"
-                  ? "Relicario dorado puesto"
-                  : `Relicario ${finish}`
+                : `Relicario ${finish}`
             }
-            width={
-              catalogId === "hero" ? RELICARIO_HERO.width : RELICARIO.width
-            }
-            height={
-              catalogId === "hero" ? RELICARIO_HERO.height : RELICARIO.height
-            }
+            width={RELICARIO.width}
+            height={RELICARIO.height}
             preload
-            className={`pointer-events-none absolute inset-0 h-full w-full object-contain transition-opacity duration-700 ease-out ${
+            className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-out ${
               showResultOnMain && heroIn ? "opacity-0" : "opacity-100"
             }`}
           />
@@ -609,43 +691,16 @@ export default function RelicarioPreview() {
           ) : null}
         </div>
 
-        <div className="flex gap-1.5">
-          {LANDING_GALLERY.map((item) => {
-            const active = catalogId === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => pickGallery(item)}
-                aria-pressed={active}
-                className="flex w-14 flex-col gap-0.5 text-left"
-              >
-                <span
-                  className={`relative aspect-square overflow-hidden border bg-white ${
-                    active
-                      ? "border-zinc-900 ring-1 ring-zinc-900/15"
-                      : "border-zinc-200 hover:border-zinc-400"
-                  }`}
-                >
-                  <Image
-                    src={item.src}
-                    alt=""
-                    fill
-                    sizes="56px"
-                    className="object-contain"
-                  />
-                </span>
-                <span
-                  className={`text-[10px] leading-tight ${
-                    active ? "font-semibold text-zinc-900" : "text-zinc-500"
-                  }`}
-                >
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
+        <div className="relative mt-1 hidden aspect-square overflow-hidden bg-white editorial:block">
+          <Image
+            src={RELICARIO_LIFESTYLE_SQUARE_SRC}
+            alt="Mujer usando el relicario personalizado"
+            fill
+            sizes="50vw"
+            className="object-cover"
+          />
         </div>
+
       </div>
 
       {result ? (

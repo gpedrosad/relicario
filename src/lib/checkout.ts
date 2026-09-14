@@ -77,7 +77,7 @@ export function checkoutLines(tienda: TiendaLocal): CheckoutLine[] {
   return [
     {
       id: "relicario",
-      name: "Relicario de acero inoxidable",
+      name: "Relicario personalizado con foto",
       detail: `Acabado ${FINISH_LABEL[isRelicarioFinish(tienda.finish) ? tienda.finish : FINISH_DEFAULT]} · pieza con tu foto`,
       price: RELICARIO_PRECIO,
     },

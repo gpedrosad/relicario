@@ -16,7 +16,7 @@ const jost = Jost({
 });
 
 export const metadata: Metadata = {
-  title: "Relicario — Lleva tus recuerdos contigo",
+  title: "Relicario personalizado con foto — Relicario",
   description: "Relicario de acero inoxidable personalizado con tu foto.",
 };
 

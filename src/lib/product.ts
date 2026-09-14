@@ -2,7 +2,7 @@ import { RELICARIO_PRECIO, RELICARIO_PRECIO_TACHADO } from "@/lib/addons";
 
 export const product = {
   id: "relicario-corazon",
-  name: "Relicario corazón personalizado",
+  name: "Relicario personalizado con foto",
   priceClp: RELICARIO_PRECIO,
   compareAtPriceClp: RELICARIO_PRECIO_TACHADO,
   rating: 4.9,

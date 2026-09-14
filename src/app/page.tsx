@@ -1,4 +1,3 @@
-import Image from "next/image";
 import ProductPurchase from "@/components/ProductPurchase";
 import RelicarioPreview from "@/components/RelicarioPreview";
 import StickyATC from "@/components/StickyATC";
@@ -78,19 +77,8 @@ export default function Home() {
       </header>
 
       <main>
-        <section className="relative aspect-[2/3] max-h-[calc(100svh-112px)] min-h-[470px] overflow-hidden bg-warm editorial:hidden">
-          <Image
-            src="/images/relicario-hero-editorial.png"
-            alt="Mujer usando un relicario dorado. Un recuerdo solo tuyo: llévalo siempre contigo."
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-center"
-          />
-        </section>
-
         <section id="producto" className="mx-auto grid max-w-[1280px] editorial:grid-cols-2 editorial:items-start">
-          <div className="bg-[var(--color-editorial)] px-4 py-6 editorial:sticky editorial:top-0 editorial:px-8 editorial:py-12 wide:px-16">
+          <div className="min-w-0 bg-[var(--color-editorial)] px-4 py-0 editorial:sticky editorial:top-0 editorial:px-8 editorial:py-12 wide:px-16">
             <RelicarioPreview />
           </div>
           <div id="buy-box" className="px-5 py-9 editorial:px-10 editorial:py-14 wide:px-20 wide:py-20">

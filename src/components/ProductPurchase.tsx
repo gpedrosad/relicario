@@ -38,7 +38,7 @@ export default function ProductPurchase() {
     <div className="flex flex-col gap-7">
       <div>
         <p className="editorial-label text-[var(--color-accent-caption)]">{product.eyebrow}</p>
-        <h1 className="mt-3 font-product text-[30px] leading-[1.15] font-bold tracking-[-0.02em] wide:text-[36px]">
+        <h1 className="mt-3 font-product text-[25px] leading-[1.2] font-bold tracking-normal">
           {product.name}
         </h1>
         <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -108,11 +108,22 @@ export default function ProductPurchase() {
         <button type="button" onClick={openPhoto} className="primary-button w-full px-5">
           Subir foto y añadir · {formatClp(total)}
         </button>
-        <ul className="mt-4 grid gap-2 text-sm text-[var(--color-text-muted)] editorial:grid-cols-2">
-          <li>✓ Acero inoxidable</li>
-          <li>✓ Garantía de 30 días</li>
-          <li>✓ Preparado a mano</li>
-          <li>✓ Despachos en Chile</li>
+        <ul className="mt-5 grid grid-cols-2 border-y border-[var(--color-border)] text-black">
+          {["Acero inoxidable", "Garantía de 30 días", "Preparado a mano", "Despachos en Chile"].map((benefit, index) => (
+            <li
+              key={benefit}
+              className={`flex min-h-[72px] items-center gap-3 py-3 ${index % 2 === 0 ? "pr-3" : "border-l border-[var(--color-border)] pl-4"} ${index > 1 ? "border-t border-[var(--color-border)]" : ""}`}
+            >
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--color-accent)] bg-[var(--color-cream)] text-[var(--color-accent-caption)]" aria-hidden>
+                <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m7 12 3 3 7-7" />
+                </svg>
+              </span>
+              <span className="font-display text-[10px] leading-4 tracking-[0.12em] uppercase editorial:text-[11px]">
+                {benefit}
+              </span>
+            </li>
+          ))}
         </ul>
       </div>
     </div>
