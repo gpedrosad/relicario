@@ -1,22 +1,21 @@
 import HeaderCart from "@/components/HeaderCart";
+import HeaderSimulationLink from "@/components/HeaderSimulationLink";
 import ProductPurchase from "@/components/ProductPurchase";
 import RelicarioPreview from "@/components/RelicarioPreview";
+import SimulationSteps from "@/components/SimulationSteps";
+import SimulatorTextLink from "@/components/SimulatorTextLink";
 import StickyATC from "@/components/StickyATC";
-
-const steps = [
-  { number: "01", title: "Sube tu foto", text: "Elige ese momento que no quieres olvidar." },
-  { number: "02", title: "La hacemos tuya", text: "Ajustamos la imagen y preparamos tu pieza a mano." },
-  { number: "03", title: "Lleva el recuerdo", text: "Recíbelo listo para usar o regalar." },
-];
 
 const faqs = [
   {
     question: "¿Qué tipo de foto funciona mejor?",
     answer: "Una foto nítida, con buena luz y el rostro al centro. Después puedes moverla y ampliarla.",
+    simulateLabel: "Probar una foto",
   },
   {
     question: "¿Puedo ver cómo quedará antes de comprar?",
     answer: "Sí. Al subirla la ves dentro del relicario y la ajustas hasta que te guste.",
+    simulateLabel: "Abrir el simulador",
   },
   {
     question: "¿Puedo usar una foto con varias personas o mascotas?",
@@ -59,18 +58,15 @@ export default function Home() {
         Envíos a todo Chile · Gratis desde $42.990
       </div>
 
-      <header className="border-b border-[var(--color-border)] bg-white">
-        <div className="mx-auto grid h-[74px] max-w-[1280px] grid-cols-[44px_1fr_44px] items-center px-4 editorial:h-[92px] editorial:px-8">
-          <a href="#como-funciona" className="flex size-11 items-center justify-start editorial:hidden" aria-label="Cómo funciona">
-            <span className="flex w-5 flex-col gap-1.5" aria-hidden>
-              <span className="h-px w-full bg-black" />
-              <span className="h-px w-full bg-black" />
-            </span>
-          </a>
+      <header className="sticky top-0 z-40 border-b border-[var(--color-border)] bg-white/95 backdrop-blur-sm">
+        <div className="mx-auto grid h-[74px] max-w-[1280px] grid-cols-[1fr_auto_1fr] items-center px-4 editorial:h-[92px] editorial:px-8">
+          <HeaderSimulationLink />
           <a href="#producto" className="col-start-2 justify-self-center font-display text-[24px] tracking-[0.18em] uppercase editorial:text-[30px]">
             Relicario
           </a>
-          <HeaderCart />
+          <div className="col-start-3 justify-self-end">
+            <HeaderCart />
+          </div>
         </div>
       </header>
 
@@ -88,15 +84,7 @@ export default function Home() {
           <div className="mx-auto max-w-[1120px]">
             <p className="editorial-label text-[var(--color-accent-caption)]">Así de simple</p>
             <h2 className="editorial-title mt-4 max-w-[12ch] text-[36px] editorial:text-[48px]">Tu historia, hecha joya</h2>
-            <div className="mt-10 grid gap-px bg-[#d9d2c8] editorial:grid-cols-3">
-              {steps.map((step) => (
-                <article key={step.number} className="bg-warm px-1 py-7 editorial:px-8 editorial:py-10">
-                  <span className="font-display text-xs tracking-[0.2em] text-[var(--color-accent-caption)]">{step.number}</span>
-                  <h3 className="mt-5 font-display text-[19px] tracking-[0.14em] uppercase">{step.title}</h3>
-                  <p className="mt-3 max-w-[27ch] text-[16px] leading-7 text-[var(--color-text-muted)]">{step.text}</p>
-                </article>
-              ))}
-            </div>
+            <SimulationSteps />
           </div>
         </section>
 
@@ -128,6 +116,9 @@ export default function Home() {
                   </summary>
                   <div className="pb-6 pr-8 editorial:pl-10 editorial:pr-14">
                     <p className="text-[16px] leading-7 text-[var(--color-text-muted)]">{faq.answer}</p>
+                    {faq.simulateLabel ? (
+                      <SimulatorTextLink label={faq.simulateLabel} />
+                    ) : null}
                   </div>
                 </details>
               ))}

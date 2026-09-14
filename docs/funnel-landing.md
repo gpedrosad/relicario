@@ -4,7 +4,7 @@ Qué pasos existen hoy en `/`, qué conviene mirar para conversión, y cómo nom
 
 No hay números inventados acá. Las hipótesis de CPA / WhatsApp están en [docs/learn/hipotesis.md](learn/hipotesis.md). El cobro real no está. `/checkout` es solo el front ([mapa](learn/mapa.md)).
 
-Fecha de este mapa: `2026-09-13`. Si el flujo cambia, actualizar este archivo el mismo día.
+Fecha de este mapa: `2026-09-14`. Si el flujo cambia, actualizar este archivo el mismo día.
 
 ## Qué no mandar nunca
 
@@ -20,12 +20,12 @@ El producto es el relicario con *su* foto. El wow es el paso 6. Comprar es el 7.
 
 ```
 0  Llegada          anuncio / orgánico / directo → GET /
-1  Landing vista    hero + precio + extras visibles
-2  Simulador        clic “Simular con tu foto”
+1  Landing vista    hero + CTA de simulación above the fold
+2  Simulador        clic “Simular con tu foto” (hero, header, pasos, FAQ o sticky)
 3  Foto elegida     file input
 4  Encuadre         POST /api/relicario/enhance
 5  Ajuste           arrastrar / zoom (opcional)
-6  Aplicar          foto en el hero + CTA comprar
+6  Aplicar          foto en el hero + recién entonces CTA comprar con precio
 7  Intención        “Comprar este relicario”
 7b Modal llavero    misma foto + envío gratis · agregar o seguir
 8  Completar        /completar?from=wow\|comprar\|carrito  ← extras, no Shopify

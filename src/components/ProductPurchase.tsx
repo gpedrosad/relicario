@@ -46,6 +46,17 @@ export default function ProductPurchase() {
 
       <p className="text-[17px] leading-7 text-[var(--color-text-muted)]">{product.description}</p>
 
+      {!photoReady ? (
+        <div>
+          <button type="button" onClick={openPhoto} className="primary-button w-full px-5">
+            Simular con tu foto
+          </button>
+          <p className="mt-2 text-center text-xs text-[var(--color-text-muted)]">
+            Pruébalo gratis antes de decidir. Sin compromiso.
+          </p>
+        </div>
+      ) : null}
+
       <section className="border-t border-[var(--color-border)] pt-6">
         <div className="flex items-baseline justify-between gap-4">
           <h2 className="font-display text-xs tracking-[0.18em] uppercase">Elige tu acabado</h2>
@@ -88,9 +99,15 @@ export default function ProductPurchase() {
       </p>
 
       <div id="comprar">
-        <button type="button" onClick={photoReady ? goToBuy : openPhoto} className="primary-button w-full px-5">
-          {photoReady ? "Comprar este relicario" : "Subir foto y añadir"} · {formatClp(landing.total)}
-        </button>
+        {photoReady ? (
+          <button type="button" onClick={goToBuy} className="primary-button w-full px-5">
+            Comprar este relicario · {formatClp(landing.total)}
+          </button>
+        ) : (
+          <p className="border-y border-[var(--color-border)] py-4 text-center text-sm leading-6 text-[var(--color-text-muted)]">
+            Primero prueba tu foto. La opción de compra aparece cuando veas el resultado.
+          </p>
+        )}
         <ul className="mt-5 grid grid-cols-2 border-y border-[var(--color-border)] text-black">
           {["Acero inoxidable", "Garantía de 30 días", "Preparado a mano", "Despachos en Chile"].map((benefit, index) => (
             <li

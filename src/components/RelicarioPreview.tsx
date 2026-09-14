@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import RelicarioPhotoEditor, {
@@ -242,6 +242,11 @@ export default function RelicarioPreview() {
   const [mobileSlide, setMobileSlide] = useState(0);
   const viewingLlavero = catalogId === "llavero" || catalogId === "llavero-ref";
   const totals = checkoutTotals(tienda);
+  const totalsWithLlavero = checkoutTotals({
+    selected: tienda.selected.includes(LLAVERO_ADDON_ID)
+      ? tienda.selected
+      : [...tienda.selected, LLAVERO_ADDON_ID],
+  });
   const [result, setResult] = useState<string | null>(null);
   useEffect(() => {
     setPhotoReady(Boolean(result));
@@ -524,6 +529,10 @@ export default function RelicarioPreview() {
     setUpsellOpen(true);
   };
 
+  const closeUpsell = useCallback(() => {
+    setUpsellOpen(false);
+  }, []);
+
   const goToCheckout = (href: string) => {
     router.push(href);
   };
@@ -728,10 +737,11 @@ export default function RelicarioPreview() {
         </div>
       ) : (
         <button
+          type="button"
           onClick={openModal}
-          className="w-full border border-dashed border-[var(--color-border)] bg-white px-6 py-3 font-display text-xs tracking-[0.12em] uppercase transition-colors hover:border-black"
+          className="primary-button w-full px-6 editorial:hidden"
         >
-          + Simular con tu foto
+          Simular con tu foto
         </button>
       )}
 
@@ -901,9 +911,10 @@ export default function RelicarioPreview() {
         open={upsellOpen}
         image={llaveroPreview}
         alreadyFreeShipping={totals.gratis}
+        totalWithLlavero={totalsWithLlavero.total}
         onAdd={() => finishUpsell(true)}
         onSkip={() => finishUpsell(false)}
-        onClose={() => setUpsellOpen(false)}
+        onClose={closeUpsell}
       />
     </div>
   );
