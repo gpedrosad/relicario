@@ -11,6 +11,7 @@ Repo: [gpedrosad/relicario](https://github.com/gpedrosad/relicario). App: Next.j
 | `/` | Tienda + `RelicarioPreview` + `ProductPurchase` |
 | `/completar` | Extras del pedido (2ª unidad, pack, resto). Nuestra página. Noindex. Entrada: `?from=wow\|comprar\|carrito` |
 | `/checkout` | Front de Shopify. Noindex. No cobra. No se customiza. |
+| `/ads` | Creatividades Meta + textos. Noindex |
 | `/costos` | Tablero. Noindex |
 | `POST /api/relicario/enhance` | Detecta caras y devuelve el crop; el cliente compone y permite arrastrar/zoom |
 

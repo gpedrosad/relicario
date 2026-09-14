@@ -2,7 +2,7 @@
 
 Canal de pauta: **Meta** (Facebook / Instagram). No hay campaña Google Search. El brief de keywords se sacó el 2026-09-14.
 
-Creatividades: `public/images/ADS/`. El anuncio tiene que mostrar la cara en el corazón, no el collar solo.
+Creatividades: `public/images/ADS/`. Textos y paso del funnel: `/ads` (`src/lib/ads-meta.ts`). El anuncio tiene que mostrar la cara en el corazón, no el collar solo.
 
 Pixel: todavía no está. Hasta que exista, no hay `purchase` medible.
 
