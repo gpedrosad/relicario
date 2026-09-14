@@ -103,3 +103,28 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   cursor: not-allowed;
   background: #d4d4d8;
 }
+
+@keyframes upsell-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes upsell-sheet-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.upsell-backdrop { animation: upsell-backdrop-in 180ms ease-out both; }
+.upsell-dialog { animation: upsell-sheet-in 240ms ease-out both; }
+
+@media (min-width: 590px) {
+  @keyframes upsell-sheet-in {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .upsell-backdrop,
+  .upsell-dialog { animation: none; }
+}

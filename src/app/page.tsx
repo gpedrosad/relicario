@@ -9,6 +9,46 @@ const steps = [
   { number: "03", title: "Lleva el recuerdo", text: "Recíbelo listo para usar o regalar." },
 ];
 
+// Contenido inicial: ajustar plazos y políticas cuando estén definidos.
+const faqs = [
+  {
+    question: "¿Qué tipo de foto funciona mejor?",
+    answer: "Elige una foto nítida, bien iluminada y sin filtros muy fuertes. Idealmente, la persona o mascota debe verse completa y estar cerca del centro. Antes de continuar podrás mover y ampliar la imagen para ajustar el encuadre.",
+  },
+  {
+    question: "¿Puedo ver cómo quedará antes de comprar?",
+    answer: "Sí. Al subir tu foto generamos una vista previa dentro del relicario. Puedes moverla, cambiar el tamaño o elegir otra imagen hasta que el resultado te guste.",
+  },
+  {
+    question: "¿Puedo usar una foto con varias personas o mascotas?",
+    answer: "Sí, siempre que todas se vean con claridad y no estén demasiado separadas. Para grupos grandes recomendamos una foto tomada a cierta distancia, con espacio alrededor de las caras para poder encuadrarla.",
+  },
+  {
+    question: "¿De qué material es el relicario?",
+    answer: "El relicario y su cadena son de acero inoxidable. Puedes elegir acabado dorado o plateado al momento de personalizar tu pieza.",
+  },
+  {
+    question: "¿Cuánto demora la preparación y el envío?",
+    answer: "Cada pieza se prepara especialmente con tu foto. El plazo estimado de producción y despacho se informará al confirmar el pedido, según tu comuna y la modalidad de envío disponible.",
+  },
+  {
+    question: "¿Viene listo para regalar?",
+    answer: "Puedes agregar una caja, tarjeta o pack de regalo desde la sección “Completa tu regalo”. También puedes dejar un mensaje o indicación especial antes de continuar.",
+  },
+  {
+    question: "¿Puedo cambiar la foto después de hacer el pedido?",
+    answer: "Escríbenos lo antes posible. Si tu pieza todavía no ha entrado en producción podremos ayudarte a reemplazar la imagen; una vez iniciada la personalización puede que ya no sea posible cambiarla.",
+  },
+  {
+    question: "¿Qué pasa si mi pedido llega con un problema?",
+    answer: "Si recibes una pieza con una falla o distinta a la personalización aprobada, contáctanos con fotos del pedido para revisarlo. Te indicaremos las opciones disponibles según el caso y nuestra política vigente.",
+  },
+  {
+    question: "¿Cómo debo cuidar mi relicario?",
+    answer: "Guárdalo seco y separado de otras joyas. Para conservar mejor el acabado, evita el contacto frecuente con agua, perfumes, cremas y productos de limpieza. Límpialo suavemente con un paño seco.",
+  },
+];
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-white text-black">
@@ -38,12 +78,15 @@ export default function Home() {
       </header>
 
       <main>
-        <section className="relative h-[66svh] min-h-[470px] overflow-hidden bg-warm editorial:hidden">
-          <Image src="/relicario-hero.jpg" alt="Relicario dorado sobre el cuello" fill priority sizes="100vw" className="object-cover object-center" />
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent px-5 pb-8 pt-28 text-white">
-            <p className="editorial-label mb-3 text-[var(--color-accent-soft)]">Un recuerdo solo tuyo</p>
-            <p className="editorial-title max-w-[12ch] text-[40px]">Llévalo siempre contigo</p>
-          </div>
+        <section className="relative aspect-[2/3] max-h-[calc(100svh-112px)] min-h-[470px] overflow-hidden bg-warm editorial:hidden">
+          <Image
+            src="/images/relicario-hero-editorial.png"
+            alt="Mujer usando un relicario dorado. Un recuerdo solo tuyo: llévalo siempre contigo."
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
+          />
         </section>
 
         <section id="producto" className="mx-auto grid max-w-[1280px] editorial:grid-cols-2 editorial:items-start">
@@ -66,6 +109,41 @@ export default function Home() {
                   <h3 className="mt-5 font-display text-[19px] tracking-[0.14em] uppercase">{step.title}</h3>
                   <p className="mt-3 max-w-[27ch] text-[16px] leading-7 text-[var(--color-text-muted)]">{step.text}</p>
                 </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="preguntas" className="bg-white px-5 py-16 editorial:px-8 editorial:py-24">
+          <div className="mx-auto grid max-w-[1120px] gap-10 editorial:grid-cols-[0.78fr_1.22fr] editorial:gap-20">
+            <div className="editorial:self-start">
+              <p className="editorial-label text-[var(--color-accent-caption)]">Antes de elegir</p>
+              <h2 className="editorial-title mt-4 max-w-[10ch] text-[36px] editorial:text-[48px]">Preguntas frecuentes</h2>
+              <p className="mt-5 max-w-[34ch] text-[16px] leading-7 text-[var(--color-text-muted)]">
+                Todo lo importante sobre tu foto, la personalización y el cuidado de la pieza.
+              </p>
+            </div>
+
+            <div className="border-t border-black">
+              {faqs.map((faq, index) => (
+                <details key={faq.question} className="group border-b border-[var(--color-border)]">
+                  <summary className="flex min-h-[76px] cursor-pointer list-none items-center justify-between gap-5 py-4 marker:content-none">
+                    <span className="flex items-baseline gap-4">
+                      <span className="hidden min-w-6 font-display text-[10px] tracking-[0.12em] text-[var(--color-accent-caption)] editorial:inline">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <span className="font-product text-[17px] leading-6 font-bold tracking-[-0.01em] editorial:text-[18px]">
+                        {faq.question}
+                      </span>
+                    </span>
+                    <span className="flex size-8 shrink-0 items-center justify-center font-display text-xl font-light transition-transform duration-200 group-open:rotate-45" aria-hidden>
+                      +
+                    </span>
+                  </summary>
+                  <div className="pb-6 pr-8 editorial:pl-10 editorial:pr-14">
+                    <p className="text-[16px] leading-7 text-[var(--color-text-muted)]">{faq.answer}</p>
+                  </div>
+                </details>
               ))}
             </div>
           </div>
@@ -97,7 +175,8 @@ export default function Home() {
           </div>
           <nav className="grid grid-cols-2 gap-4 text-sm text-[var(--color-on-dark-muted)] editorial:justify-self-end editorial:text-right" aria-label="Información">
             <a href="#producto">Producto</a><a href="#como-funciona">Cómo funciona</a>
-            <a id="envios" href="#envios">Envíos Chile</a><a id="devoluciones" href="#devoluciones">Devoluciones</a>
+            <a href="#preguntas">Preguntas frecuentes</a><a id="envios" href="#envios">Envíos Chile</a>
+            <a id="devoluciones" href="#devoluciones">Devoluciones</a>
           </nav>
         </div>
         <p className="mx-auto mt-12 max-w-[1120px] text-xs text-white/40">© {new Date().getFullYear()} Relicario · Hecho para guardar lo que importa.</p>
