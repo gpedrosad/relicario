@@ -76,7 +76,7 @@ Pedir el WhatsApp. El drip. Kapso. Shopify. Usar *su* foto en un anuncio (sin co
 
 ## 4. Dónde va en la UI
 
-Hoy: entra → sube foto → ve el relicario → Aplicar / Descargar → Comprar (aún no cobra).  
+Hoy: entra → sube foto → ve el relicario → Usar esta foto → Comprar (aún no cobra).  
 Lo legal son **cinco lugares**, no un muro al inicio.
 
 ### 0. Entra al sitio

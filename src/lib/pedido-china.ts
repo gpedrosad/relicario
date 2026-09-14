@@ -1,4 +1,5 @@
 import { ADDONS } from "@/lib/addons";
+import { COSTO_BOLSA, COSTO_CAJA } from "@/lib/costos";
 
 /** Primer vuelo de prueba. Decisión: docs/learn/decisiones.md */
 export const PEDIDO_CHINA_PIEZAS = 50;
@@ -10,6 +11,7 @@ export type LineaPedido = {
   attachPct: number;
   origin: "china" | "chile";
   note: string;
+  unitCost?: number;
 };
 
 function pedir(piezas: number, attachPct: number, spare = 0) {
@@ -20,16 +22,16 @@ function pedir(piezas: number, attachPct: number, spare = 0) {
 /**
  * Qué viaja en el primer avión vs qué se hace en Chile.
  * Attach: tesorería de un test, no un forecast de escala.
- * caja-premium y pack-regalo no se apilan: una caja rígida por venta.
+ * La caja rígida solo viaja para el pack. No hay caja suelta.
  */
 export function armarPedidoChina(piezas = PEDIDO_CHINA_PIEZAS): {
   piezas: number;
   china: LineaPedido[];
   chile: LineaPedido[];
   totalUnidadesChina: number;
+  totalCostoConocidoChina: number;
 } {
   const cadena = ADDONS.find((item) => item.id === "cadena-premium");
-  const caja = ADDONS.find((item) => item.id === "caja-premium");
   const pack = ADDONS.find((item) => item.id === "pack-regalo");
   const segunda = ADDONS.find((item) => item.id === "segunda-foto");
   const tarjeta = ADDONS.find((item) => item.id === "tarjeta");
@@ -55,11 +57,12 @@ export function armarPedidoChina(piezas = PEDIDO_CHINA_PIEZAS): {
     },
     {
       id: "caja-rigida",
-      name: `Caja rígida (${caja?.name ?? "premium"} o ${pack?.name ?? "pack"})`,
-      qty: pedir(piezas, 35, 0),
-      attachPct: 35,
+      name: `Caja rígida (${pack?.name ?? "pack regalo"})`,
+      qty: pedir(piezas, 20, 2),
+      attachPct: 20,
       origin: "china",
-      note: "Caja premium y pack no se suman. 15% + 20% = 35% de las 50.",
+      unitCost: COSTO_CAJA,
+      note: "Solo el pack. Misma demanda que la bolsa. No hay caja suelta.",
     },
     {
       id: "bolsa-regalo",
@@ -67,6 +70,7 @@ export function armarPedidoChina(piezas = PEDIDO_CHINA_PIEZAS): {
       qty: pedir(piezas, 20, 2),
       attachPct: 20,
       origin: "china",
+      unitCost: COSTO_BOLSA,
       note: "Solo el pack lleva bolsa. Tarjeta del pack se imprime acá.",
     },
   ];
@@ -111,5 +115,9 @@ export function armarPedidoChina(piezas = PEDIDO_CHINA_PIEZAS): {
     china,
     chile,
     totalUnidadesChina: china.reduce((sum, row) => sum + row.qty, 0),
+    totalCostoConocidoChina: china.reduce(
+      (sum, row) => sum + (row.unitCost ?? 0) * row.qty,
+      0,
+    ),
   };
 }

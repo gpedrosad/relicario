@@ -1,6 +1,7 @@
 import {
   ADDONS,
   RELICARIO_PRECIO,
+  SEGUNDA_UNIDAD_ID,
   addonsTotal,
 } from "@/lib/addons";
 import type { TiendaLocal } from "@/lib/local-project";
@@ -29,6 +30,10 @@ export function checkoutHref(from: CheckoutFrom) {
   return `/checkout?from=${from}`;
 }
 
+export function completarHref(from: CheckoutFrom) {
+  return `/completar?from=${from}`;
+}
+
 export const BEFORE_CHECKOUT_EVENT = "relicario:before-checkout";
 
 export type BeforeCheckoutDetail = {
@@ -41,7 +46,7 @@ export function requestCheckout(
   navigate: (href: string) => void,
 ) {
   if (typeof window === "undefined") {
-    navigate(checkoutHref(from));
+    navigate(completarHref(from));
     return;
   }
   const allowed = window.dispatchEvent(
@@ -50,7 +55,7 @@ export function requestCheckout(
       detail: { from },
     }),
   );
-  if (allowed) navigate(checkoutHref(from));
+  if (allowed) navigate(completarHref(from));
 }
 
 export type CheckoutLine = {
@@ -58,6 +63,7 @@ export type CheckoutLine = {
   name: string;
   detail: string;
   price: number;
+  image?: string;
 };
 
 export function checkoutLines(tienda: TiendaLocal): CheckoutLine[] {
@@ -68,8 +74,9 @@ export function checkoutLines(tienda: TiendaLocal): CheckoutLine[] {
       {
         id: addon.id,
         name: addon.name,
-        detail: "Extra",
+        detail: addon.id === SEGUNDA_UNIDAD_ID ? "2ª pieza · mismo acabado" : "Extra",
         price: addon.price,
+        image: addon.image,
       },
     ];
   });

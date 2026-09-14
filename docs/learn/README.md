@@ -7,6 +7,7 @@ Memoria viva del proyecto. Las specs no viven acá: se **aprende** acá (qué de
 | Composite / `relicario-llavero.png` | `src/lib/relicario-spec.ts`, `docs/relicario-png.md` |
 | Costos | `src/lib/costos.ts`, `docs/costos-relicario.md` |
 | Funnel y eventos de la landing | `docs/funnel-landing.md` |
+| Keywords / Google Ads Search CL | `docs/keywords-google.md` |
 | Envío gratis / ticket | `docs/learn/envio-gratis-ticket.md` |
 | Ley 21.719 en esta web | `docs/ley-21719-relicario.md` |
 | Este índice | `docs/learn/README.md` |

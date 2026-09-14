@@ -1,38 +1,28 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useProjectLocal } from "@/components/ProjectLocalProvider";
 import {
-  ADDONS,
-  LLAVERO_ADDON_ID,
   RELICARIO_PRECIO,
   RELICARIO_PRECIO_TACHADO,
-  addonsTotal,
   formatClp,
-  toggleAddon,
 } from "@/lib/addons";
-import { checkoutTotals, ENVIO_GRATIS_DESDE } from "@/lib/checkout";
+import { checkoutTotals, ENVIO_GRATIS_DESDE, requestCheckout } from "@/lib/checkout";
 import { FINISHES, FINISH_LABEL, type RelicarioFinish } from "@/lib/relicario-finish";
 import { product } from "@/lib/product";
 
 export default function ProductPurchase() {
-  const { tienda, setTienda } = useProjectLocal();
-  const [note, setNote] = useState("");
-  const selected = tienda.selected;
-  const extras = useMemo(() => addonsTotal(selected), [selected]);
-  const subtotal = RELICARIO_PRECIO + extras;
-  const { envio, gratis, falta, total } = checkoutTotals({ selected });
+  const { tienda, setTienda, photoReady } = useProjectLocal();
+  const router = useRouter();
+  const landing = checkoutTotals({ selected: [] });
   const discount = Math.round((1 - RELICARIO_PRECIO / RELICARIO_PRECIO_TACHADO) * 100);
 
-  const onToggle = (id: string) => {
-    setTienda((current) => ({ ...current, selected: toggleAddon(current.selected, id) }));
-  };
-
   const setFinish = (finish: RelicarioFinish) => {
-    setTienda((current) => current.finish === finish ? current : { ...current, finish });
+    setTienda((current) => (current.finish === finish ? current : { ...current, finish }));
   };
 
   const openPhoto = () => window.dispatchEvent(new Event("relicario:open-photo"));
+  const goToBuy = () => requestCheckout("comprar", (href) => router.push(href));
 
   return (
     <div className="flex flex-col gap-7">
@@ -42,9 +32,11 @@ export default function ProductPurchase() {
           {product.name}
         </h1>
         <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
-          <span className="font-product text-[26px] font-bold">{formatClp(subtotal)}</span>
-          {extras === 0 && <span className="text-base text-black/40 line-through">{formatClp(RELICARIO_PRECIO_TACHADO)}</span>}
-          {extras === 0 && <span className="bg-[var(--color-badge-bg)] px-2 py-1 font-display text-[10px] tracking-[0.12em] text-[var(--color-badge-text)] uppercase">Ahorra {discount}%</span>}
+          <span className="font-product text-[26px] font-bold">{formatClp(RELICARIO_PRECIO)}</span>
+          <span className="text-base text-black/40 line-through">{formatClp(RELICARIO_PRECIO_TACHADO)}</span>
+          <span className="bg-[var(--color-badge-bg)] px-2 py-1 font-display text-[10px] tracking-[0.12em] text-[var(--color-badge-text)] uppercase">
+            Ahorra {discount}%
+          </span>
         </div>
         <div className="mt-3 flex items-center gap-2 text-sm">
           <span className="tracking-[0.1em] text-[var(--color-accent)]" aria-hidden>★★★★★</span>
@@ -72,41 +64,31 @@ export default function ProductPurchase() {
         </div>
       </section>
 
-      <section className="border border-dashed border-[var(--color-border)] bg-[var(--color-editorial)] p-5">
-        <p className="font-display text-xs tracking-[0.18em] uppercase">Tu foto</p>
-        <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">Súbela y comprueba el encuadre dentro del corazón antes de comprar.</p>
-        <button type="button" onClick={openPhoto} className="mt-4 min-h-11 w-full border border-black bg-white px-4 font-display text-xs tracking-[0.12em] uppercase transition-colors hover:bg-black hover:text-white">
-          + Subir foto
+      <section className={`border p-5 ${photoReady ? "border-black bg-[var(--color-editorial)]" : "border-dashed border-[var(--color-border)] bg-[var(--color-editorial)]"}`}>
+        <p className="font-display text-xs tracking-[0.18em] uppercase">
+          {photoReady ? "Foto lista" : "Tu foto"}
+        </p>
+        <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
+          {photoReady
+            ? "Ya está en el corazón. Si te gusta, cómpralo. Si no, cámbiala."
+            : "Súbela y comprueba el encuadre dentro del corazón antes de comprar."}
+        </p>
+        <button
+          type="button"
+          onClick={openPhoto}
+          className="mt-4 min-h-11 w-full border border-black bg-white px-4 font-display text-xs tracking-[0.12em] uppercase transition-colors hover:bg-black hover:text-white"
+        >
+          {photoReady ? "Cambiar foto" : "+ Subir foto"}
         </button>
       </section>
 
-      <label className="block">
-        <span className="font-display text-xs tracking-[0.18em] uppercase">Mensaje para tu pedido <span className="normal-case tracking-normal text-black/40">(opcional)</span></span>
-        <textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} maxLength={160} placeholder="Cuéntanos si es un regalo o deja una indicación…" className="mt-3 w-full resize-none border border-[var(--color-border)] px-4 py-3 text-sm outline-none transition-colors focus:border-black" />
-      </label>
-
-      <details id="extras" className="group border-y border-[var(--color-border)] py-1">
-        <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between font-display text-xs tracking-[0.18em] uppercase">
-          Completa tu regalo <span className="text-lg font-normal transition-transform group-open:rotate-45">+</span>
-        </summary>
-        <div className="pb-4">
-          {ADDONS.filter((addon) => addon.id !== LLAVERO_ADDON_ID).map((addon) => (
-            <label key={addon.id} className="flex cursor-pointer items-start gap-3 border-t border-[var(--color-border)] py-3 text-sm">
-              <input type="checkbox" checked={selected.includes(addon.id)} onChange={() => onToggle(addon.id)} className="mt-1 size-4 accent-black" />
-              <span className="flex-1"><strong className="font-medium">{addon.name}</strong><span className="block text-[var(--color-text-muted)]">{addon.description}</span></span>
-              <span>+{formatClp(addon.price)}</span>
-            </label>
-          ))}
-        </div>
-      </details>
-
-      <div className={`px-4 py-3 text-sm ${gratis ? "bg-[#eef6f1] text-[var(--color-success)]" : "bg-[var(--color-editorial)] text-[var(--color-text-muted)]"}`}>
-        {gratis ? "✓ Envío gratis desbloqueado" : <>Te faltan <strong>{formatClp(falta)}</strong> para envío gratis. <span className="block text-xs">Envío actual {formatClp(envio)} · gratis desde {formatClp(ENVIO_GRATIS_DESDE)}</span></>}
-      </div>
+      <p className="text-sm text-[var(--color-text-muted)]">
+        Envío {formatClp(landing.envio)} · gratis desde {formatClp(ENVIO_GRATIS_DESDE)}
+      </p>
 
       <div id="comprar">
-        <button type="button" onClick={openPhoto} className="primary-button w-full px-5">
-          Subir foto y añadir · {formatClp(total)}
+        <button type="button" onClick={photoReady ? goToBuy : openPhoto} className="primary-button w-full px-5">
+          {photoReady ? "Comprar este relicario" : "Subir foto y añadir"} · {formatClp(landing.total)}
         </button>
         <ul className="mt-5 grid grid-cols-2 border-y border-[var(--color-border)] text-black">
           {["Acero inoxidable", "Garantía de 30 días", "Preparado a mano", "Despachos en Chile"].map((benefit, index) => (

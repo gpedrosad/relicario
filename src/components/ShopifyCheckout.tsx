@@ -167,13 +167,15 @@ export default function ShopifyCheckout() {
           <ul className="flex flex-col gap-4">
             {lines.map((line) => (
               <li key={line.id} className="flex items-center gap-3">
-                {line.id === "relicario" || line.id === LLAVERO_ADDON_ID ? (
+                {line.id === "relicario" || line.id === LLAVERO_ADDON_ID || line.image ? (
                   <span className="relative size-16 overflow-hidden rounded-md border border-zinc-200 bg-white">
                     <Image
                       src={
                         line.id === LLAVERO_ADDON_ID
                           ? RELICARIO_LLAVERO.src
-                          : overlaySrc(tienda.finish)
+                          : line.id === "relicario"
+                            ? overlaySrc(tienda.finish)
+                            : (line.image ?? "")
                       }
                       alt=""
                       fill

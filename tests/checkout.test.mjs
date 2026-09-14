@@ -90,9 +90,29 @@ test("el checkout nombra el acabado dorado o plateado", () => {
   assert.match(plateado[0].detail, /Plateado/);
 });
 
+test("la segunda unidad desbloquea envío gratis", () => {
+  const { SEGUNDA_UNIDAD_PRECIO, checkoutTotals } = loadCheckout();
+  assert.equal(SEGUNDA_UNIDAD_PRECIO, 19_990);
+  const dos = checkoutTotals({ selected: ["segunda-unidad"] });
+  assert.equal(dos.subtotal, 34_990 + 19_990);
+  assert.equal(dos.gratis, true);
+  assert.equal(dos.envio, 0);
+});
+
+test("comprar va a completar, no a shopify", () => {
+  const { checkoutHref, completarHref, requestCheckout } = loadCheckout();
+  assert.equal(completarHref("wow"), "/completar?from=wow");
+  assert.equal(checkoutHref("wow"), "/checkout?from=wow");
+  let href = "";
+  requestCheckout("comprar", (next) => {
+    href = next;
+  });
+  assert.equal(href, "/completar?from=comprar");
+});
+
 test("un extra chico no alcanza el envío gratis", () => {
   const { ENVIO_COBRADO, checkoutTotals } = loadCheckout();
-  const caja = checkoutTotals({ selected: ["caja-premium"] });
-  assert.equal(caja.gratis, false);
-  assert.equal(caja.envio, ENVIO_COBRADO);
+  const pack = checkoutTotals({ selected: ["pack-regalo"] });
+  assert.equal(pack.gratis, false);
+  assert.equal(pack.envio, ENVIO_COBRADO);
 });

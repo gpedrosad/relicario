@@ -16,7 +16,7 @@ PostHog / pixel: IDs anónimos. Si más adelante hay WhatsApp, identificar con u
 
 ## Funnel (pasos)
 
-El producto es el relicario con *su* foto. El wow es el paso 6. Comprar es el 7. El llavero es un modal **al pulsar Comprar**, no en la landing. Después va a `/checkout`. El envío gratis (≥ $42.990) es el gancho de ese modal.
+El producto es el relicario con *su* foto. El wow es el paso 6. Comprar es el 7. El llavero es un modal **al pulsar Comprar**, no en la landing. Después va a `/completar` (extras) y recién ahí a `/checkout`. El envío gratis (≥ $42.990) es el gancho de ese modal.
 
 ```
 0  Llegada          anuncio / orgánico / directo → GET /
@@ -28,8 +28,8 @@ El producto es el relicario con *su* foto. El wow es el paso 6. Comprar es el 7.
 6  Aplicar          foto en el hero + CTA comprar
 7  Intención        “Comprar este relicario”
 7b Modal llavero    misma foto + envío gratis · agregar o seguir
-8  Ticket           extras (opcional)
-9  Checkout         /checkout?from=wow\|comprar\|carrito
+8  Completar        /completar?from=wow\|comprar\|carrito  ← extras, no Shopify
+9  Checkout         /checkout?from=wow\|comprar\|carrito   ← front Shopify, no se toca
 10 Pago             Shopify + MP                ← front en /checkout, no cobra
 11 Compra           order paid
 ```
@@ -38,10 +38,8 @@ Salidas importantes (no son “fallo”, son fugas):
 
 | Salida | Dónde | Por qué mirarla |
 | --- | --- | --- |
-| Cerrar modal sin aplicar | X, Cancelar, backdrop | Vieron el simulador y no hubo wow |
+| Cerrar modal sin aplicar | X, backdrop | Vieron el simulador y no hubo wow |
 | Error de encuadre | enhance 4xx/5xx | Fricción técnica, no de oferta |
-| Descargar | hero o modal | Se llevan el wow sin pagar |
-| Quitar | hero | Arrepentimiento / mala foto |
 | Cambiar foto | hero o modal | Reintento; no es abandono si luego aplican |
 
 Pasos **aún no construidos** (dejar el evento listo, no dispararlo en falso):
@@ -75,8 +73,6 @@ Nombres estables, `snake_case`, prefijo `relicario_`. Descripción en español. 
 | Evento | Cuándo | Props |
 | --- | --- | --- |
 | `relicario_simulate_close` | Cierran el modal sin aplicar | `had_photo`: bool |
-| `relicario_preview_download` | Descargan el PNG | `place`: `modal` \| `hero` |
-| `relicario_preview_removed` | Quitar | — |
 | `relicario_photo_adjust` | Primer drag o primer zoom de esa sesión | `kind`: `pan` \| `zoom` |
 
 `relicario_photo_adjust` **una vez** por visita (o por foto). No un evento por cada píxel del arrastre.
@@ -90,8 +86,10 @@ Nombres estables, `snake_case`, prefijo `relicario_`. Descripción en español. 
 | `relicario_llavero_upsell_shown` | Modal al Comprar | `from`: `wow` \| `comprar` \| `carrito` |
 | `relicario_llavero_upsell_accepted` | Agregar y seguir a checkout | `from` |
 | `relicario_llavero_upsell_skipped` | Seguir sin llavero | `from` |
+| `relicario_cart_opened` | Icono del carrito | `extras`: n |
+| `relicario_cart_cleared` | “Quitar extras” | `extras`: n (antes de vaciar) |
 
-IDs: `clasica`, `memorial`, `pareja`, `madre`, `hija`, `mascota`. Addons: `llavero`, `segunda-foto`, `cadena-premium`, `caja-premium`, `tarjeta`, `foto-extra`, `pack-regalo`, `entrega-prioritaria`. Fuente: [`src/lib/addons.ts`](../src/lib/addons.ts).
+IDs: `clasica`, `memorial`, `pareja`, `madre`, `hija`, `mascota`. Addons: `llavero`, `segunda-unidad`, `segunda-foto`, `cadena-premium`, `tarjeta`, `foto-extra`, `pack-regalo`, `entrega-prioritaria`. Fuente: [`src/lib/addons.ts`](../src/lib/addons.ts).
 
 ### Cuando existan
 
@@ -108,8 +106,7 @@ IDs: `clasica`, `memorial`, `pareja`, `madre`, `hija`, `mascota`. Addons: `llave
 
 1. **Wow.** `$pageview` (path `/`) → `simulate_open` → `photo_selected` → `enhance_succeeded` → `preview_applied`.
 2. **Intención.** `preview_applied` → `buy_cta` → `checkout_click` → (luego) `checkout_started` → `purchase`.
-3. **Fuga del PNG.** `preview_applied` → `preview_download` **sin** `buy_cta` en la misma sesión.
-4. **Técnico.** `enhance_started` → `enhance_failed` / `enhance_succeeded`.
+3. **Técnico.** `enhance_started` → `enhance_failed` / `enhance_succeeded`.
 
 Ruptura grave: mucha gente en `simulate_open` y poca en `photo_selected` (miedo a la foto). O mucha en `preview_applied` y poca en `buy_cta` (el wow no vende). O `buy_cta` alto y `checkout_click` bajo (el scroll / el precio con extras asusta).
 
@@ -120,7 +117,6 @@ Cuando haya identify:
 - `version_id` último
 - `addons` última selección
 - `has_applied_preview`: bool
-- `has_downloaded_preview`: bool
 
 Sin PII. `/costos` no forma parte de este funnel (tablero interno).
 

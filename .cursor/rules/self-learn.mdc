@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Self-learn
 
-Índice: `docs/learn/README.md`. Specs no se duplican: PNG → `relicario-spec.ts`; plata → `costos.ts`; ley → `docs/ley-21719-relicario.md`.
+Índice: `docs/learn/README.md`. Specs no se duplican: PNG → `relicario-spec.ts`; plata → `costos.ts`; ley → `docs/ley-21719-relicario.md`; Ads → `docs/keywords-google.md`.
 
 - Antes de tocar producto, costos, legal, deploy o el simulador: leer `docs/learn/mapa.md` y el MD del tema (`decisiones`, `lecciones`, `hipotesis`).
 - El usuario cierra un criterio → fila en `decisiones.md` + entrada arriba en `log.md`.

@@ -1,3 +1,4 @@
+import HeaderCart from "@/components/HeaderCart";
 import ProductPurchase from "@/components/ProductPurchase";
 import RelicarioPreview from "@/components/RelicarioPreview";
 import StickyATC from "@/components/StickyATC";
@@ -12,39 +13,43 @@ const steps = [
 const faqs = [
   {
     question: "¿Qué tipo de foto funciona mejor?",
-    answer: "Elige una foto nítida, bien iluminada y sin filtros muy fuertes. Idealmente, la persona o mascota debe verse completa y estar cerca del centro. Antes de continuar podrás mover y ampliar la imagen para ajustar el encuadre.",
+    answer: "Una foto nítida, con buena luz y el rostro al centro. Después puedes moverla y ampliarla.",
   },
   {
     question: "¿Puedo ver cómo quedará antes de comprar?",
-    answer: "Sí. Al subir tu foto generamos una vista previa dentro del relicario. Puedes moverla, cambiar el tamaño o elegir otra imagen hasta que el resultado te guste.",
+    answer: "Sí. Al subirla la ves dentro del relicario y la ajustas hasta que te guste.",
   },
   {
     question: "¿Puedo usar una foto con varias personas o mascotas?",
-    answer: "Sí, siempre que todas se vean con claridad y no estén demasiado separadas. Para grupos grandes recomendamos una foto tomada a cierta distancia, con espacio alrededor de las caras para poder encuadrarla.",
+    answer: "Sí, si se ven claras. En grupos, mejor una foto con un poco de distancia.",
   },
   {
     question: "¿De qué material es el relicario?",
-    answer: "El relicario y su cadena son de acero inoxidable. Puedes elegir acabado dorado o plateado al momento de personalizar tu pieza.",
+    answer: "Acero inoxidable, en acabado dorado o plateado.",
   },
   {
     question: "¿Cuánto demora la preparación y el envío?",
-    answer: "Cada pieza se prepara especialmente con tu foto. El plazo estimado de producción y despacho se informará al confirmar el pedido, según tu comuna y la modalidad de envío disponible.",
+    answer: "Cada pieza se hace con tu foto. El plazo lo ves al confirmar, según comuna y envío.",
+  },
+  {
+    question: "¿Puedo llevar dos relicarios?",
+    answer: "Sí. La segunda unidad cuesta $19.990 y deja el envío gratis.",
   },
   {
     question: "¿Viene listo para regalar?",
-    answer: "Puedes agregar una caja, tarjeta o pack de regalo desde la sección “Completa tu regalo”. También puedes dejar un mensaje o indicación especial antes de continuar.",
+    answer: "Al confirmar puedes agregar el pack (caja y bolsa) a $2.990, o una tarjeta.",
   },
   {
     question: "¿Puedo cambiar la foto después de hacer el pedido?",
-    answer: "Escríbenos lo antes posible. Si tu pieza todavía no ha entrado en producción podremos ayudarte a reemplazar la imagen; una vez iniciada la personalización puede que ya no sea posible cambiarla.",
+    answer: "Escríbenos pronto. Si ya empezó la personalización, puede que no se pueda.",
   },
   {
     question: "¿Qué pasa si mi pedido llega con un problema?",
-    answer: "Si recibes una pieza con una falla o distinta a la personalización aprobada, contáctanos con fotos del pedido para revisarlo. Te indicaremos las opciones disponibles según el caso y nuestra política vigente.",
+    answer: "Escríbenos con fotos del pedido y lo revisamos.",
   },
   {
     question: "¿Cómo debo cuidar mi relicario?",
-    answer: "Guárdalo seco y separado de otras joyas. Para conservar mejor el acabado, evita el contacto frecuente con agua, perfumes, cremas y productos de limpieza. Límpialo suavemente con un paño seco.",
+    answer: "Guárdalo seco, lejos de agua, perfume y cremas. Límpialo con un paño seco.",
   },
 ];
 
@@ -66,13 +71,7 @@ export default function Home() {
           <a href="#producto" className="col-start-2 justify-self-center font-display text-[24px] tracking-[0.18em] uppercase editorial:text-[30px]">
             Relicario
           </a>
-          <a href="#comprar" className="relative flex size-11 items-center justify-end" aria-label="Ir a comprar">
-            <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-              <path d="M5 8h14l-1 12H6L5 8Z" />
-              <path d="M9 9V6a3 3 0 0 1 6 0v3" />
-            </svg>
-            <span className="absolute right-0 top-1.5 size-2.5 rounded-full bg-[var(--color-cart-dot)]" />
-          </a>
+          <HeaderCart />
         </div>
       </header>
 
@@ -108,7 +107,7 @@ export default function Home() {
               <p className="editorial-label text-[var(--color-accent-caption)]">Antes de elegir</p>
               <h2 className="editorial-title mt-4 max-w-[10ch] text-[36px] editorial:text-[48px]">Preguntas frecuentes</h2>
               <p className="mt-5 max-w-[34ch] text-[16px] leading-7 text-[var(--color-text-muted)]">
-                Todo lo importante sobre tu foto, la personalización y el cuidado de la pieza.
+                Foto, material, envío y cuidado.
               </p>
             </div>
 
@@ -120,7 +119,7 @@ export default function Home() {
                       <span className="hidden min-w-6 font-display text-[10px] tracking-[0.12em] text-[var(--color-accent-caption)] editorial:inline">
                         {String(index + 1).padStart(2, "0")}
                       </span>
-                      <span className="font-product text-[17px] leading-6 font-bold tracking-[-0.01em] editorial:text-[18px]">
+                      <span className="text-[16px] leading-6 font-medium editorial:text-[17px]">
                         {faq.question}
                       </span>
                     </span>

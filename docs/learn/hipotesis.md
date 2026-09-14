@@ -13,5 +13,6 @@ Supuestos. Si se confirma → `decisiones.md` o `lecciones.md`. Si muere, dejar 
 | H6 | Un envío WhatsApp con *su* foto (casilla 1) recupera abandonos | Compras atribuibles al mensaje vs solo pixel | abierta |
 | H7 | MP solo alcanza; Webpay se suma si hay abandono de checkout | % drop en pago, 20+ intentos | abierta |
 | H8 | Envío condicionado ($2.000 / gratis ≥ $42.990) convierte mejor que “gratis siempre” sin matar el wow | % de pedidos con llavero o extras que cruzan el umbral vs bounce en checkout | abierta |
+| H10 | El mapa de intención (foto + guardapelo + collar relicario) convierte mejor que pujar solo `relicario personalizado` | CTR Search, QS y compras por ad group en el test $5–7/día; ver [keywords-google.md](../keywords-google.md) | abierta |
 
 Al matar o cerrar: fecha, evidencia (n, $), y a qué archivo se movió.

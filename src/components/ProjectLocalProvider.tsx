@@ -25,6 +25,9 @@ type ProjectLocalContextValue = {
   resetCostos: () => void;
   tienda: TiendaLocal;
   setTienda: Dispatch<SetStateAction<TiendaLocal>>;
+  /** La foto ya está en el relicario. Solo de sesión: no se persiste. */
+  photoReady: boolean;
+  setPhotoReady: Dispatch<SetStateAction<boolean>>;
 };
 
 const ProjectLocalContext = createContext<ProjectLocalContextValue | null>(null);
@@ -32,6 +35,7 @@ const ProjectLocalContext = createContext<ProjectLocalContextValue | null>(null)
 export function ProjectLocalProvider({ children }: { children: ReactNode }) {
   const [costos, setCostos] = useState<CostosInput>(COSTOS_DEFAULT);
   const [tienda, setTienda] = useState<TiendaLocal>(TIENDA_DEFAULT);
+  const [photoReady, setPhotoReady] = useState(false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -56,8 +60,10 @@ export function ProjectLocalProvider({ children }: { children: ReactNode }) {
       resetCostos: () => setCostos(COSTOS_DEFAULT),
       tienda,
       setTienda,
+      photoReady,
+      setPhotoReady,
     }),
-    [ready, costos, tienda],
+    [ready, costos, tienda, photoReady],
   );
 
   return (

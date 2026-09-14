@@ -22,8 +22,8 @@ import {
 } from "@/lib/addons";
 import {
   BEFORE_CHECKOUT_EVENT,
-  checkoutHref,
   checkoutTotals,
+  completarHref,
   requestCheckout,
   type BeforeCheckoutDetail,
   type CheckoutFrom,
@@ -235,7 +235,7 @@ const LLAVERO_OVERLAY: OverlayHole = {
 };
 
 export default function RelicarioPreview() {
-  const { tienda, setTienda } = useProjectLocal();
+  const { tienda, setTienda, setPhotoReady } = useProjectLocal();
   const finish = tienda.finish;
   const showLlavero = tienda.selected.includes(LLAVERO_ADDON_ID);
   const [catalogId, setCatalogId] = useState<string>(finish);
@@ -243,6 +243,9 @@ export default function RelicarioPreview() {
   const viewingLlavero = catalogId === "llavero" || catalogId === "llavero-ref";
   const totals = checkoutTotals(tienda);
   const [result, setResult] = useState<string | null>(null);
+  useEffect(() => {
+    setPhotoReady(Boolean(result));
+  }, [result, setPhotoReady]);
   const [llaveroPreview, setLlaveroPreview] = useState<string | null>(null);
   const [upsellOpen, setUpsellOpen] = useState(false);
   const [checkoutFrom, setCheckoutFrom] = useState<CheckoutFrom>("wow");
@@ -455,6 +458,12 @@ export default function RelicarioPreview() {
     hideModal(() => {
       setCatalogId(finish);
       setRevealTick((tick) => tick + 1);
+      window.requestAnimationFrame(() => {
+        document.getElementById("despues-foto")?.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      });
     });
   };
 
@@ -538,7 +547,7 @@ export default function RelicarioPreview() {
   const finishUpsell = (add: boolean) => {
     if (add) persistLlavero();
     setUpsellOpen(false);
-    const href = checkoutHref(checkoutFrom);
+    const href = completarHref(checkoutFrom);
     window.setTimeout(() => {
       router.push(href);
     }, 0);
@@ -587,15 +596,6 @@ export default function RelicarioPreview() {
   const showResultOnMain =
     Boolean(result) &&
     (viewingLlavero || catalogId === "dorado" || catalogId === "plateado");
-
-  const downloadResult = async () => {
-    const src = (await composeCurrent()) ?? preview ?? result;
-    if (!src) return;
-    const link = document.createElement("a");
-    link.href = src;
-    link.download = "relicario-con-mi-foto.png";
-    link.click();
-  };
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
@@ -705,57 +705,26 @@ export default function RelicarioPreview() {
 
       {result ? (
         <div
+          id="despues-foto"
           className={`flex flex-col gap-3 transition-all duration-700 ease-out ${
             heroIn ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
           }`}
         >
+          <p className="text-sm leading-6 text-[var(--color-text-muted)]">
+            Así quedó tu pieza. Si te gusta, el siguiente paso es comprarla.
+          </p>
           <button
             onClick={goToBuy}
             className="primary-button w-full px-6"
           >
             Comprar este relicario · {formatClp(totals.total)}
           </button>
-          <div className="flex items-center justify-center gap-4 text-sm">
-            <button
-              onClick={openModal}
-              className="font-medium text-zinc-700 underline-offset-4 transition-colors hover:text-zinc-900 hover:underline"
-            >
-              Cambiar foto
-            </button>
-            <button
-              onClick={downloadResult}
-              className="font-medium text-zinc-500 underline-offset-4 transition-colors hover:text-zinc-800 hover:underline"
-            >
-              Descargar
-            </button>
-            <button
-              onClick={() => {
-                URL.revokeObjectURL(result);
-                if (preview && preview !== result) URL.revokeObjectURL(preview);
-                if (debugOverlay) URL.revokeObjectURL(debugOverlay);
-                photo?.close();
-                setPhoto(null);
-                setCrop(null);
-                setScale(1);
-                setPan({ x: 0, y: 0 });
-                setResult(null);
-                setPreview(null);
-                setRevealTick(0);
-                setDebugInfo(null);
-                setDebugOverlay(null);
-                setLlaveroPreview((current) => {
-                  if (current) URL.revokeObjectURL(current);
-                  return null;
-                });
-                if (catalogId === "llavero" || catalogId === "llavero-ref") {
-                  setCatalogId(finish);
-                }
-              }}
-              className="font-medium text-zinc-400 underline-offset-4 transition-colors hover:text-zinc-700 hover:underline"
-            >
-              Quitar
-            </button>
-          </div>
+          <button
+            onClick={openModal}
+            className="self-center font-medium text-zinc-700 underline-offset-4 transition-colors hover:text-zinc-900 hover:underline"
+          >
+            Cambiar foto
+          </button>
         </div>
       ) : (
         <button
@@ -906,15 +875,8 @@ export default function RelicarioPreview() {
             )}
             </div>
 
-            <div className="grid shrink-0 grid-cols-2 gap-2 border-t border-[var(--color-border)] bg-white px-5 py-4 editorial:px-7 editorial:py-5">
-              <button
-                onClick={close}
-                disabled={loading}
-                className="min-h-11 border border-[var(--color-border)] px-4 font-display text-xs tracking-[0.1em] uppercase transition-colors hover:border-black disabled:opacity-40"
-              >
-                Cancelar
-              </button>
-              {(preview || photo || error) && (
+            {(preview || photo || error) && (
+              <div className="grid shrink-0 grid-cols-2 gap-2 border-t border-[var(--color-border)] bg-white px-5 py-4 editorial:px-7 editorial:py-5">
                 <button
                   onClick={() => inputRef.current?.click()}
                   disabled={loading}
@@ -922,22 +884,15 @@ export default function RelicarioPreview() {
                 >
                   Elegir otra
                 </button>
-              )}
-              <button
-                onClick={downloadResult}
-                disabled={!preview || loading}
-                className="min-h-11 border border-[var(--color-border)] px-4 font-display text-xs tracking-[0.1em] uppercase transition-colors hover:border-black disabled:cursor-not-allowed disabled:opacity-35"
-              >
-                Descargar
-              </button>
-              <button
-                onClick={apply}
-                disabled={!preview || loading}
-                className="primary-button col-span-2 mt-1 px-4"
-              >
-                Usar esta foto
-              </button>
-            </div>
+                <button
+                  onClick={apply}
+                  disabled={!preview || loading}
+                  className="primary-button px-4"
+                >
+                  Usar esta foto
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

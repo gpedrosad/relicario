@@ -10,7 +10,9 @@ Estimación en CLP, septiembre 2026. **La base del análisis es sin IVA (19%)**.
 | Pieza | $4.500 | Confirmado, puesto en Chile |
 | Envío cobrado al cliente | $2.000 bajo $42.990; $0 desde $42.990 | Decidido 2026-09-13. Ver `docs/learn/envio-gratis-ticket.md` |
 | Courier que pagamos | $4.000 promedio | Decidido. Neto envío: **$2.000** |
-| Empaque | $1.500 | Decidido |
+| Empaque | $500 | Cada venta. El pack no lo reemplaza. `empaqueCosto` en `src/lib/costos.ts`. |
+| Caja rígida | $500 c/u | Solo el pack. No se vende suelta. |
+| Bolsa de tela | $500 c/u | Solo si agregan el pack. Se suma. Pack a $2.990: extra $1.000 + comisión ~$173, queda ~$1.820. |
 | Comisión de cobro | **5,8%** sobre ticket + envío | Shopify 2% (pasarela externa) + Mercado Pago 3,19% + IVA ≈ 3,80% efectivo. |
 | Devoluciones | 1% | Decidido. Se asume que la pieza vuelve y se puede revender. |
 | IA | $400 / venta | 4 previews × $100. Ver §3. |
@@ -25,12 +27,12 @@ Cobro que ve el cliente a ticket $34.990: **$36.990** (producto + envío).
 +  2.000  envío cobrado
 -  4.500  pieza
 -  4.000  courier
--  1.500  empaque
+-    500  empaque (sin pack)
 -  2.145  comisión 5,8% de $36.990 (Shopify 2% + MP ~3,80%)
 -    400  IA
 -    365  reserva devolución 1%
 ───────
-  24.080  margen de contribución (techo de ads)
+  25.080  margen de contribución (techo de ads)
 ```
 
 La reserva del 1% cubre: devolver el cobro, el envío de ida ya pagado, un envío de vuelta ($4.000) y la comisión que no se recupera. No vuelve a comprar la pieza.
@@ -38,8 +40,8 @@ La reserva del 1% cubre: devolver el cobro, el envío de ida ya pagado, un enví
 Fórmula:
 
 ```
-utilidad = 24.080 − CPA
-quiebre  = CPA ≈ $24.100
+utilidad = 25.080 − CPA
+quiebre  = CPA ≈ $25.100
 ```
 
 La landing ya no dice envío gratis plano: $2.000 bajo $42.990, gratis al cruzar (llavero o ~$8.000 en extras).
@@ -61,8 +63,10 @@ Pendiente: ¿los $4.500 llevan IVA? ¿mínimo de compra / plazo de reposición?
 | Ítem | Cliente paga | Nosotros pagamos | Neto |
 | --- | --- | --- | --- |
 | Envío | $2.000 | $4.000 | **−$2.000** |
-| Empaque | $0 | $1.500 | **−$1.500** |
-| **Logística** | **$2.000** | **$5.500** | **−$3.500** |
+| Empaque | $0 | $500 | **−$500** |
+| **Logística** | **$2.000** | **$4.500** | **−$2.500** |
+
+Caja $500 y bolsa $500 se suman al empaque $500 si agregan el pack (total $1.500). El cliente paga $2.990. Extra $1.000 + comisión ~$173. Queda ~$1.820. No meter caja/bolsa en el costo de todas las ventas. $1.990 se lee barato.
 
 Si el promedio de $4.000 se va a $5.000–$6.000 (Magallanes, express 24 h, reintentos), cada $1.000 extra sale entero de la utilidad. El “24–48 h” de la landing empuja al tramo caro.
 

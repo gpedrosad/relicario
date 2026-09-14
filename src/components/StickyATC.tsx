@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useProjectLocal } from "@/components/ProjectLocalProvider";
-import { checkoutTotals } from "@/lib/checkout";
+import { checkoutTotals, requestCheckout } from "@/lib/checkout";
 import { formatClp } from "@/lib/addons";
 
 export default function StickyATC() {
   const [visible, setVisible] = useState(false);
-  const { tienda } = useProjectLocal();
+  const { tienda, photoReady } = useProjectLocal();
+  const router = useRouter();
   const total = checkoutTotals(tienda).total;
 
   useEffect(() => {
@@ -28,8 +30,16 @@ export default function StickyATC() {
 
   return (
     <div className={`fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-white p-3 transition-transform duration-300 editorial:hidden ${visible ? "translate-y-0" : "translate-y-full"}`}>
-      <button type="button" onClick={() => window.dispatchEvent(new Event("relicario:open-photo"))} className="primary-button w-full px-5">
-        Añadir al carro · {formatClp(total)}
+      <button
+        type="button"
+        onClick={() =>
+          photoReady
+            ? requestCheckout("carrito", (href) => router.push(href))
+            : window.dispatchEvent(new Event("relicario:open-photo"))
+        }
+        className="primary-button w-full px-5"
+      >
+        {photoReady ? "Comprar este relicario" : "Subir foto y añadir"} · {formatClp(total)}
       </button>
     </div>
   );

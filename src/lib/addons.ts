@@ -2,12 +2,20 @@ export const RELICARIO_PRECIO = 34_990;
 export const RELICARIO_PRECIO_TACHADO = 49_990;
 export const LLAVERO_ADDON_ID = "llavero";
 export const LLAVERO_PRECIO = 8_990;
+export const PACK_REGALO_ID = "pack-regalo";
+export const PACK_REGALO_PRECIO = 2_990;
+export const PACK_REGALO_SRC = "/images/pack-regalo.jpg";
+export const SEGUNDA_UNIDAD_ID = "segunda-unidad";
+export const SEGUNDA_UNIDAD_PRECIO = 19_990;
+export const FEATURED_OFFER_IDS = [SEGUNDA_UNIDAD_ID, PACK_REGALO_ID] as const;
 
 export type Addon = {
   id: string;
   name: string;
   description: string;
   price: number;
+  compareAtPrice?: number;
+  image?: string;
   conflictsWith?: readonly string[];
 };
 
@@ -18,6 +26,14 @@ export const ADDONS: readonly Addon[] = [
     name: "Llavero con tu foto",
     description: "La misma foto, lista en un llavero de acero inoxidable.",
     price: LLAVERO_PRECIO,
+  },
+  {
+    id: SEGUNDA_UNIDAD_ID,
+    name: "Segundo relicario",
+    description: "Otra pieza, mismo acabado. Suma envío gratis.",
+    price: SEGUNDA_UNIDAD_PRECIO,
+    compareAtPrice: RELICARIO_PRECIO,
+    image: "/relicario-colgante.png",
   },
   {
     id: "segunda-foto",
@@ -32,18 +48,10 @@ export const ADDONS: readonly Addon[] = [
     price: 5_990,
   },
   {
-    id: "caja-premium",
-    name: "Caja de regalo premium",
-    description: "Rígida, con espuma o terciopelo.",
-    price: 4_990,
-    conflictsWith: ["pack-regalo"],
-  },
-  {
     id: "tarjeta",
     name: "Tarjeta personalizada",
     description: "Mensaje impreso con un diseño cuidado.",
     price: 1_990,
-    conflictsWith: ["pack-regalo"],
   },
   {
     id: "foto-extra",
@@ -52,11 +60,12 @@ export const ADDONS: readonly Addon[] = [
     price: 2_000,
   },
   {
-    id: "pack-regalo",
-    name: "Pack regalo listo",
-    description: "Caja, tarjeta y bolsa. Listo para entregar.",
-    price: 5_990,
-    conflictsWith: ["caja-premium", "tarjeta"],
+    id: PACK_REGALO_ID,
+    name: "Pack para regalo",
+    description: "Caja rígida y bolsa. Listo para entregar.",
+    price: PACK_REGALO_PRECIO,
+    compareAtPrice: 6_990,
+    image: PACK_REGALO_SRC,
   },
   {
     id: "entrega-prioritaria",
@@ -86,6 +95,10 @@ export function toggleAddon(
     }),
     id,
   ];
+}
+
+export function isFeaturedOffer(id: string) {
+  return (FEATURED_OFFER_IDS as readonly string[]).includes(id);
 }
 
 export function addonsTotal(selected: readonly string[]) {

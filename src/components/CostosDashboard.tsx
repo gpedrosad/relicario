@@ -7,6 +7,8 @@ import {
   CPA_PRESETS,
   CPC_PRESETS,
   DIAS_MES,
+  EMPAQUE_BASE,
+  EMPAQUE_CON_PACK,
   IVA_PCT,
   HEALTH_LABEL,
   OBJETIVO_PRESETS,
@@ -209,6 +211,9 @@ export default function CostosDashboard() {
             </div>
             <p className="text-sm text-zinc-500">
               {pedido.totalUnidadesChina} unidades en el avión
+              {pedido.totalCostoConocidoChina > 0
+                ? ` · cajas y bolsas ${clp(pedido.totalCostoConocidoChina)}`
+                : null}
             </p>
           </div>
 
@@ -219,6 +224,7 @@ export default function CostosDashboard() {
                   <th className="pb-2 font-medium">Ítem</th>
                   <th className="pb-2 font-medium">Attach</th>
                   <th className="pb-2 text-right font-medium">Pedir</th>
+                  <th className="pb-2 text-right font-medium">Costo u.</th>
                   <th className="pb-2 font-medium">Origen</th>
                 </tr>
               </thead>
@@ -232,6 +238,9 @@ export default function CostosDashboard() {
                     <td className="py-2.5 text-zinc-600">{row.attachPct}%</td>
                     <td className="py-2.5 text-right text-lg font-bold tabular-nums">
                       {row.qty}
+                    </td>
+                    <td className="py-2.5 text-right tabular-nums text-zinc-600">
+                      {row.unitCost != null ? clp(row.unitCost) : "—"}
                     </td>
                     <td className="py-2.5">
                       <span className="rounded-full bg-zinc-900 px-2 py-0.5 text-xs font-medium text-white">
@@ -248,6 +257,7 @@ export default function CostosDashboard() {
                     </td>
                     <td className="py-2.5">{row.attachPct}%</td>
                     <td className="py-2.5 text-right tabular-nums">0</td>
+                    <td className="py-2.5 text-right tabular-nums">—</td>
                     <td className="py-2.5">
                       <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
                         Chile
@@ -300,9 +310,15 @@ export default function CostosDashboard() {
             />
             <Field
               label="Empaque"
+              hint="Sin pack $500. Pack: +caja $500 +bolsa $500 = $1.500"
               value={input.empaque}
               onChange={(value) => set("empaque", value)}
               step={100}
+            />
+            <PresetRow
+              values={[EMPAQUE_BASE, EMPAQUE_CON_PACK]}
+              current={input.empaque}
+              onPick={(value) => set("empaque", value)}
             />
             <Field
               label="Shopify"
@@ -1248,7 +1264,7 @@ function PresetRow({
                 : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
             }`}
           >
-            {value >= 1000 ? clp(value) : value}
+            {value >= 100 ? clp(value) : value}
           </button>
         );
       })}

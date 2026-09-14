@@ -17,12 +17,26 @@ export type CostosInput = {
   ventasDia: number;
 };
 
+/** Costo unitario de la caja rígida. Solo entra si hay pack. */
+export const COSTO_CAJA = 500;
+/** Costo unitario de la bolsa de tela. Solo entra si hay pack. */
+export const COSTO_BOLSA = 500;
+export const COSTO_PACK_REGALO = COSTO_CAJA + COSTO_BOLSA;
+/** Empaque de cada venta sin addon de regalo. */
+export const EMPAQUE_BASE = 500;
+/** Empaque + caja $500 + bolsa $500. No reemplaza el base. */
+export const EMPAQUE_CON_PACK = EMPAQUE_BASE + COSTO_PACK_REGALO;
+
+export function empaqueCosto(conPack: boolean) {
+  return conPack ? EMPAQUE_CON_PACK : EMPAQUE_BASE;
+}
+
 export const COSTOS_DEFAULT: CostosInput = {
   ticket: 34_990,
   pieza: 4_500,
   envioCobrado: 2_000,
   courier: 4_000,
-  empaque: 1_500,
+  empaque: EMPAQUE_BASE,
   shopifyPct: 2,
   mercadoPagoPct: 3.8,
   devolucionesPct: 1,
@@ -324,7 +338,7 @@ export function analizarCostos(input: CostosInput): CostosAnalisis {
       amount: empaque,
       pctCobro: pct(empaque),
       health: healthEmpaque,
-      note: "Cajita, relleno, sticker.",
+      note: `Sin pack ${clp(EMPAQUE_BASE)}. Con caja y bolsa ${clp(EMPAQUE_CON_PACK)}.`,
     },
     {
       id: "comision",
