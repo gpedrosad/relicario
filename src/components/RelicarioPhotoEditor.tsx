@@ -223,7 +223,7 @@ export default function RelicarioPhotoEditor({
     ((RELICARIO.hole.minY + RELICARIO.hole.height / 2) / RELICARIO.height) * 100;
 
   return (
-    <div className="mt-4">
+    <div className="py-5">
       <div className="flex justify-center">
         <div
           className="relative w-full max-h-[36vh]"
@@ -234,7 +234,7 @@ export default function RelicarioPhotoEditor({
         >
           <canvas
             ref={canvasRef}
-            className="h-full w-full cursor-grab touch-none rounded-xl bg-white active:cursor-grabbing"
+            className="h-full w-full cursor-grab touch-none border border-[var(--color-border)] bg-white active:cursor-grabbing"
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={endPointer}
@@ -245,7 +245,7 @@ export default function RelicarioPhotoEditor({
               className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2"
               style={{ left: `${holeLeft}%`, top: `${holeTop}%` }}
             >
-              <div className="flex items-center gap-1.5 rounded-full bg-zinc-900/90 px-3 py-1.5 text-xs font-medium text-white shadow-lg">
+              <div className="flex items-center gap-1.5 rounded-full bg-black/90 px-3 py-1.5 text-xs font-medium text-white">
                 <MoveIcon />
                 Arrastra para ajustar
               </div>
@@ -253,28 +253,28 @@ export default function RelicarioPhotoEditor({
           )}
         </div>
       </div>
-      <div className="mt-3 flex items-center justify-center gap-3">
+      <div className="mt-4 flex items-center justify-center gap-3">
         <button
           type="button"
           onClick={() => applyScale(scale - PHOTO_EDIT.step)}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-300 text-xl font-semibold text-zinc-800 hover:border-zinc-500"
+          className="flex size-11 items-center justify-center border border-[var(--color-border)] text-xl font-medium hover:border-black"
           aria-label="Achicar foto"
         >
           −
         </button>
-        <p className="min-w-16 text-center text-sm font-medium text-zinc-600">
+        <p className="min-w-16 text-center font-display text-xs tracking-[0.1em]">
           {Math.round(scale * 100)}%
         </p>
         <button
           type="button"
           onClick={() => applyScale(scale + PHOTO_EDIT.step)}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-300 text-xl font-semibold text-zinc-800 hover:border-zinc-500"
+          className="flex size-11 items-center justify-center border border-[var(--color-border)] text-xl font-medium hover:border-black"
           aria-label="Agrandar foto"
         >
           +
         </button>
       </div>
-      <p className="mt-2 text-center text-xs text-zinc-500">
+      <p className="mt-3 text-center text-xs text-[var(--color-text-muted)]">
         Arrastra para mover. Pellizca, rueda o usa + / − para el tamaño.
       </p>
     </div>

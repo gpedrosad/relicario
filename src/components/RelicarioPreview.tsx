@@ -356,6 +356,16 @@ export default function RelicarioPreview() {
     setOpen(true);
   };
 
+  useEffect(() => {
+    const onOpenPhoto = () => {
+      setPreview(result);
+      setError(null);
+      setOpen(true);
+    };
+    window.addEventListener("relicario:open-photo", onOpenPhoto);
+    return () => window.removeEventListener("relicario:open-photo", onOpenPhoto);
+  }, [result]);
+
   const handleFile = async (file: File | undefined) => {
     if (!file) return;
 
@@ -502,8 +512,8 @@ export default function RelicarioPreview() {
     setUpsellOpen(true);
   };
 
-  const goToCheckout = (from: CheckoutFrom) => {
-    router.push(checkoutHref(from));
+  const goToCheckout = (href: string) => {
+    router.push(href);
   };
 
   const goToBuy = () => {
@@ -562,7 +572,7 @@ export default function RelicarioPreview() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
-        <div className="relative aspect-[3/2] overflow-hidden rounded-2xl bg-white">
+        <div className="relative aspect-[3/2] overflow-hidden bg-white">
           <Image
             src={catalogSrc}
             alt={
@@ -610,7 +620,7 @@ export default function RelicarioPreview() {
                 className="flex w-14 flex-col gap-0.5 text-left"
               >
                 <span
-                  className={`relative aspect-square overflow-hidden rounded-lg border bg-white ${
+                  className={`relative aspect-square overflow-hidden border bg-white ${
                     active
                       ? "border-zinc-900 ring-1 ring-zinc-900/15"
                       : "border-zinc-200 hover:border-zinc-400"
@@ -645,7 +655,7 @@ export default function RelicarioPreview() {
         >
           <button
             onClick={goToBuy}
-            className="w-full rounded-full bg-zinc-900 px-6 py-3.5 font-semibold text-white transition-colors hover:bg-zinc-700"
+            className="primary-button w-full px-6"
           >
             Comprar este relicario · {formatClp(totals.total)}
           </button>
@@ -694,31 +704,37 @@ export default function RelicarioPreview() {
       ) : (
         <button
           onClick={openModal}
-          className="w-full rounded-full border border-zinc-300 px-6 py-3 font-semibold text-zinc-800 transition-colors hover:border-zinc-500"
+          className="w-full border border-dashed border-[var(--color-border)] bg-white px-6 py-3 font-display text-xs tracking-[0.12em] uppercase transition-colors hover:border-black"
         >
-          Simular con tu foto
+          + Simular con tu foto
         </button>
       )}
 
       {open && (
         <div
-          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 transition-opacity duration-200 ${
+          className={`fixed inset-0 z-50 flex items-end justify-center bg-black/55 p-0 backdrop-blur-[2px] transition-opacity duration-200 editorial:items-center editorial:p-6 ${
             modalIn ? "opacity-100" : "opacity-0"
           }`}
           onClick={close}
         >
           <div
-            className={`flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white p-6 shadow-xl transition-all duration-200 ${
-              modalIn ? "scale-100 opacity-100" : "scale-[0.98] opacity-0"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="photo-modal-title"
+            className={`flex max-h-[94svh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[4px] bg-white shadow-[0_-8px_40px_rgba(0,0,0,0.18)] transition-all duration-200 editorial:max-h-[90vh] editorial:rounded-[4px] editorial:shadow-[0_20px_70px_rgba(0,0,0,0.28)] ${
+              modalIn ? "translate-y-0 opacity-100 editorial:scale-100" : "translate-y-4 opacity-0 editorial:translate-y-0 editorial:scale-[0.98]"
             }`}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start justify-between gap-5 border-b border-[var(--color-border)] px-5 py-5 editorial:px-7 editorial:py-6">
               <div>
-                <h2 className="text-xl font-bold tracking-tight">
+                <p className="editorial-label text-[var(--color-accent-caption)]">
+                  Personaliza tu joya
+                </p>
+                <h2 id="photo-modal-title" className="mt-2 font-product text-[24px] leading-tight font-bold tracking-[-0.02em]">
                   {photo || preview ? "Tu relicario" : "Sube tu foto"}
                 </h2>
-                <p className="mt-1 text-sm text-zinc-500">
+                <p className="mt-2 max-w-[50ch] text-sm leading-5 text-[var(--color-text-muted)]">
                   {loading
                     ? LOADING_STAGES[loadingStage]
                     : photo
@@ -730,7 +746,7 @@ export default function RelicarioPreview() {
                 type="button"
                 onClick={close}
                 disabled={loading}
-                className="-mr-1 -mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-800 disabled:opacity-40"
+                className="flex size-11 shrink-0 items-center justify-center border border-[var(--color-border)] text-black/45 transition-colors hover:border-black hover:text-black disabled:opacity-40"
                 aria-label="Cerrar"
               >
                 <svg
@@ -747,30 +763,31 @@ export default function RelicarioPreview() {
               </button>
             </div>
 
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => handleFile(e.target.files?.[0])}
-            />
+            <div className="min-h-0 flex-1 overflow-auto px-5 editorial:px-7">
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleFile(e.target.files?.[0])}
+              />
 
-            {loading ? (
-              <div className="relative mt-4 overflow-hidden rounded-xl bg-white">
+              {loading ? (
+              <div className="relative my-5 overflow-hidden bg-[var(--color-editorial)]">
                 <img
                   src={overlaySrc(finish)}
                   alt="Generando relicario"
                   className="max-h-[50vh] w-full object-contain opacity-80"
                 />
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/70">
-                  <span className="h-10 w-10 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-900" />
-                  <p className="text-sm font-medium text-zinc-800">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-white/75">
+                  <span className="size-10 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-black" />
+                  <p className="font-display text-xs tracking-[0.14em] uppercase">
                     {LOADING_STAGES[loadingStage]}
                   </p>
                 </div>
               </div>
             ) : photo && baseImage && hole ? (
-              <div className="mt-0 min-h-0 flex-1 overflow-auto">
+              <div className="min-h-0">
                 <RelicarioPhotoEditor
                   photo={photo}
                   base={baseImage}
@@ -820,22 +837,24 @@ export default function RelicarioPreview() {
             ) : (
               <button
                 onClick={() => inputRef.current?.click()}
-                className="mt-4 flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-zinc-300 px-6 py-16 text-sm font-medium text-zinc-500 transition-colors hover:border-zinc-500 hover:text-zinc-800"
+                className="my-5 flex min-h-[260px] w-full flex-col items-center justify-center gap-3 border border-dashed border-black/30 bg-[var(--color-editorial)] px-6 py-12 text-center transition-colors hover:border-black hover:bg-[var(--color-cream)]"
               >
-                <span className="text-2xl">+</span>
-                Haz clic para elegir una foto
+                <span className="flex size-12 items-center justify-center rounded-full border border-[var(--color-accent)] text-xl" aria-hidden>+</span>
+                <span className="font-display text-xs tracking-[0.16em] uppercase">Seleccionar una foto</span>
+                <span className="max-w-[30ch] text-sm leading-5 text-[var(--color-text-muted)]">JPG, PNG o HEIC · Busca una imagen nítida y bien iluminada</span>
               </button>
             )}
 
             {error && (
-              <p className="mt-3 text-center text-sm text-red-600">{error}</p>
+              <p className="mb-4 border-l-2 border-red-600 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
             )}
+            </div>
 
-            <div className="mt-5 flex shrink-0 flex-wrap gap-3">
+            <div className="grid shrink-0 grid-cols-2 gap-2 border-t border-[var(--color-border)] bg-white px-5 py-4 editorial:px-7 editorial:py-5">
               <button
                 onClick={close}
                 disabled={loading}
-                className="flex-1 rounded-full border border-zinc-200 px-4 py-2.5 font-semibold text-zinc-600 transition-colors hover:border-zinc-400 disabled:opacity-40"
+                className="min-h-11 border border-[var(--color-border)] px-4 font-display text-xs tracking-[0.1em] uppercase transition-colors hover:border-black disabled:opacity-40"
               >
                 Cancelar
               </button>
@@ -843,7 +862,7 @@ export default function RelicarioPreview() {
                 <button
                   onClick={() => inputRef.current?.click()}
                   disabled={loading}
-                  className="flex-1 rounded-full border border-zinc-200 px-4 py-2.5 font-semibold text-zinc-700 transition-colors hover:border-zinc-400 disabled:opacity-60"
+                  className="min-h-11 border border-[var(--color-border)] px-4 font-display text-xs tracking-[0.1em] uppercase transition-colors hover:border-black disabled:opacity-60"
                 >
                   Elegir otra
                 </button>
@@ -851,16 +870,16 @@ export default function RelicarioPreview() {
               <button
                 onClick={downloadResult}
                 disabled={!preview || loading}
-                className="flex-1 rounded-full border border-zinc-200 px-4 py-2.5 font-semibold text-zinc-700 transition-colors hover:border-zinc-400 disabled:cursor-not-allowed disabled:opacity-40"
+                className="min-h-11 border border-[var(--color-border)] px-4 font-display text-xs tracking-[0.1em] uppercase transition-colors hover:border-black disabled:cursor-not-allowed disabled:opacity-35"
               >
                 Descargar
               </button>
               <button
                 onClick={apply}
                 disabled={!preview || loading}
-                className="flex-1 rounded-full bg-zinc-900 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-300"
+                className="primary-button col-span-2 mt-1 px-4"
               >
-                Aplicar
+                Usar esta foto
               </button>
             </div>
           </div>

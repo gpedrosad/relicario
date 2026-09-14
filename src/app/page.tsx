@@ -1,47 +1,109 @@
+import Image from "next/image";
 import ProductPurchase from "@/components/ProductPurchase";
 import RelicarioPreview from "@/components/RelicarioPreview";
+import StickyATC from "@/components/StickyATC";
+
+const steps = [
+  { number: "01", title: "Sube tu foto", text: "Elige ese momento que no quieres olvidar." },
+  { number: "02", title: "La hacemos tuya", text: "Ajustamos la imagen y preparamos tu pieza a mano." },
+  { number: "03", title: "Lleva el recuerdo", text: "Recíbelo listo para usar o regalar." },
+];
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col bg-white text-zinc-900">
-      <header className="border-b border-zinc-100 px-6 py-4">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <span className="text-lg font-bold tracking-tight">Relicario</span>
-          <nav className="flex items-center gap-4 text-sm text-zinc-600">
-            <a href="#producto" className="hover:text-zinc-900">
-              Producto
-            </a>
-            <a href="#extras" className="hover:text-zinc-900">
-              Extras
-            </a>
-            <a href="#comprar" className="hover:text-zinc-900">
-              Comprar
-            </a>
-            <a href="/costos" className="hover:text-zinc-900">
-              Costos
-            </a>
-          </nav>
+    <div className="min-h-screen bg-white text-black">
+      <div className="bg-announcement px-4 py-2.5 text-center text-[12px] font-semibold tracking-[0.12em] text-white uppercase">
+        Envíos a todo Chile · Gratis desde $42.990
+      </div>
+
+      <header className="border-b border-[var(--color-border)] bg-white">
+        <div className="mx-auto grid h-[74px] max-w-[1280px] grid-cols-[44px_1fr_44px] items-center px-4 editorial:h-[92px] editorial:px-8">
+          <a href="#como-funciona" className="flex size-11 items-center justify-start editorial:hidden" aria-label="Cómo funciona">
+            <span className="flex w-5 flex-col gap-1.5" aria-hidden>
+              <span className="h-px w-full bg-black" />
+              <span className="h-px w-full bg-black" />
+            </span>
+          </a>
+          <a href="#producto" className="col-start-2 justify-self-center font-display text-[24px] tracking-[0.18em] uppercase editorial:text-[30px]">
+            Relicario
+          </a>
+          <a href="#comprar" className="relative flex size-11 items-center justify-end" aria-label="Ir a comprar">
+            <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+              <path d="M5 8h14l-1 12H6L5 8Z" />
+              <path d="M9 9V6a3 3 0 0 1 6 0v3" />
+            </svg>
+            <span className="absolute right-0 top-1.5 size-2.5 rounded-full bg-[var(--color-cart-dot)]" />
+          </a>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-12">
-        <section
-          id="producto"
-          className="grid items-start gap-10 md:grid-cols-2"
-        >
-          <div className="md:sticky md:top-8">
+      <main>
+        <section className="relative h-[66svh] min-h-[470px] overflow-hidden bg-warm editorial:hidden">
+          <Image src="/relicario-hero.jpg" alt="Relicario dorado sobre el cuello" fill priority sizes="100vw" className="object-cover object-center" />
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent px-5 pb-8 pt-28 text-white">
+            <p className="editorial-label mb-3 text-[var(--color-accent-soft)]">Un recuerdo solo tuyo</p>
+            <p className="editorial-title max-w-[12ch] text-[40px]">Llévalo siempre contigo</p>
+          </div>
+        </section>
+
+        <section id="producto" className="mx-auto grid max-w-[1280px] editorial:grid-cols-2 editorial:items-start">
+          <div className="bg-[var(--color-editorial)] px-4 py-6 editorial:sticky editorial:top-0 editorial:px-8 editorial:py-12 wide:px-16">
             <RelicarioPreview />
           </div>
-          <ProductPurchase />
+          <div id="buy-box" className="px-5 py-9 editorial:px-10 editorial:py-14 wide:px-20 wide:py-20">
+            <ProductPurchase />
+          </div>
+        </section>
+
+        <section id="como-funciona" className="bg-warm px-5 py-16 editorial:px-8 editorial:py-20">
+          <div className="mx-auto max-w-[1120px]">
+            <p className="editorial-label text-[var(--color-accent-caption)]">Así de simple</p>
+            <h2 className="editorial-title mt-4 max-w-[12ch] text-[36px] editorial:text-[48px]">Tu historia, hecha joya</h2>
+            <div className="mt-10 grid gap-px bg-[#d9d2c8] editorial:grid-cols-3">
+              {steps.map((step) => (
+                <article key={step.number} className="bg-warm px-1 py-7 editorial:px-8 editorial:py-10">
+                  <span className="font-display text-xs tracking-[0.2em] text-[var(--color-accent-caption)]">{step.number}</span>
+                  <h3 className="mt-5 font-display text-[19px] tracking-[0.14em] uppercase">{step.title}</h3>
+                  <p className="mt-3 max-w-[27ch] text-[16px] leading-7 text-[var(--color-text-muted)]">{step.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-footer px-5 py-16 text-white editorial:px-8 editorial:py-20">
+          <div className="mx-auto max-w-[1120px] text-center">
+            <div className="text-[var(--color-accent)]" aria-label="Cinco estrellas">★★★★★</div>
+            <h2 className="editorial-title mx-auto mt-5 max-w-[16ch] text-[34px] editorial:text-[46px]">Creado para guardar lo irrepetible</h2>
+            <p className="mx-auto mt-5 max-w-[56ch] text-[16px] leading-7 text-[var(--color-on-dark-muted)]">
+              Acero inoxidable, personalización con tu foto y preparación cuidada en cada pedido.
+            </p>
+            <div className="mx-auto mt-10 grid max-w-[820px] gap-3 editorial:grid-cols-3">
+              {["Acero inoxidable", "30 días de garantía", "Despachos en Chile"].map((item) => (
+                <div key={item} className="border border-white/15 px-4 py-5 font-display text-xs tracking-[0.15em] uppercase">
+                  <span className="mr-2 text-[var(--color-verified)]">✓</span>{item}
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
       </main>
 
-      <footer className="border-t border-zinc-100 px-6 py-6">
-        <p className="mx-auto max-w-5xl text-center text-sm text-zinc-400">
-          © {new Date().getFullYear()} Relicario — Todos los derechos
-          reservados
-        </p>
+      <footer className="border-t border-white/10 bg-footer px-5 pb-28 pt-12 text-white editorial:px-8 editorial:pb-12">
+        <div className="mx-auto grid max-w-[1120px] gap-10 editorial:grid-cols-2">
+          <div>
+            <p className="editorial-label text-[var(--color-accent-soft)]">Escríbenos</p>
+            <a href="mailto:hola@relicario.cl" className="mt-4 inline-block text-xl underline decoration-white/30 underline-offset-8">hola@relicario.cl</a>
+          </div>
+          <nav className="grid grid-cols-2 gap-4 text-sm text-[var(--color-on-dark-muted)] editorial:justify-self-end editorial:text-right" aria-label="Información">
+            <a href="#producto">Producto</a><a href="#como-funciona">Cómo funciona</a>
+            <a id="envios" href="#envios">Envíos Chile</a><a id="devoluciones" href="#devoluciones">Devoluciones</a>
+          </nav>
+        </div>
+        <p className="mx-auto mt-12 max-w-[1120px] text-xs text-white/40">© {new Date().getFullYear()} Relicario · Hecho para guardar lo que importa.</p>
       </footer>
+
+      <StickyATC />
     </div>
   );
 }

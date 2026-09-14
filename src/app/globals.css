@@ -1,18 +1,105 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-cta: #111111;
+  --color-cta-hover: #000000;
+  --color-accent: #d4af6e;
+  --color-accent-soft: #e6c98a;
+  --color-accent-caption: #a17a3f;
+  --color-surface: #ffffff;
+  --color-editorial: #fafaf8;
+  --color-warm: #f3efe8;
+  --color-cream: #faf7f1;
+  --color-badge-bg: #f5f0e8;
+  --color-badge-text: #8a7350;
+  --color-text: #000000;
+  --color-text-editorial: #1a1a1a;
+  --color-text-muted: #6a6a6a;
+  --color-on-dark: #ffffff;
+  --color-on-dark-muted: #cccccc;
+  --color-announcement: #1c1d1d;
+  --color-footer: #1a1a1a;
+  --color-border: #e8e8e1;
+  --color-cart-dot: #ff4f33;
+  --color-success: #1a7743;
+  --color-verified: #4caf50;
+  --font-futura: "Futura Medium", Futura, "Century Gothic", system-ui, sans-serif;
+  --font-poppins: var(--font-poppins-next), Poppins, sans-serif;
+  --font-jost: var(--font-jost-next), Jost, sans-serif;
+  --radius-none: 0;
+  --radius-sm: 4px;
+  --radius-md: 12px;
+  --radius-pill: 999px;
+  --bp-editorial: 590px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-cta: #111111;
+  --color-accent: #d4af6e;
+  --color-editorial: #fafaf8;
+  --color-warm: #f3efe8;
+  --color-cream: #faf7f1;
+  --color-announcement: #1c1d1d;
+  --color-footer: #1a1a1a;
+  --font-sans: var(--font-jost);
+  --font-display: var(--font-futura);
+  --font-product: var(--font-poppins);
+  --breakpoint-editorial: 36.875rem;
+  --breakpoint-wide: 62.5rem;
 }
 
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
 body {
-  background: var(--background);
-  color: var(--foreground);
+  margin: 0;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-jost);
+  letter-spacing: 0.025em;
+}
+
+button, a { -webkit-tap-highlight-color: transparent; }
+
+button:focus-visible, a:focus-visible, input:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.editorial-label {
+  font-family: var(--font-futura);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.editorial-title {
+  font-family: var(--font-futura);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 1.03;
+  text-transform: uppercase;
+}
+
+.primary-button {
+  min-height: 48px;
+  border: 0;
+  border-radius: 0;
+  background: var(--color-cta);
+  color: white;
+  font-family: var(--font-futura);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.primary-button:hover { background: var(--color-cta-hover); }
+.primary-button:active { transform: scale(0.99); }
+.primary-button:disabled {
+  cursor: not-allowed;
+  background: #d4d4d8;
 }
