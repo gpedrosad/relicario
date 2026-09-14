@@ -548,14 +548,15 @@ export default function RelicarioPreview() {
     }
   };
 
+  const selectedGalleryItem = LANDING_GALLERY.find(
+    (item) => item.id === catalogId,
+  );
   const catalogSrc =
-    catalogId === "hero"
-      ? RELICARIO_HERO.src
-      : catalogId === "llavero-ref"
+    catalogId === "llavero-ref"
         ? "/relicario-llavero-referencia.png"
         : catalogId === "llavero"
-          ? RELICARIO_LLAVERO.src
-          : overlaySrc(finish);
+          ? "/images/relicario-llavero-editorial.png"
+          : selectedGalleryItem?.src ?? RELICARIO_HERO.src;
   const showResultOnMain =
     Boolean(result) &&
     (viewingLlavero || catalogId === "dorado" || catalogId === "plateado");

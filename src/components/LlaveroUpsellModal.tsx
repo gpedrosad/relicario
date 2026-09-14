@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import Image from "next/image";
 import { formatClp, LLAVERO_PRECIO } from "@/lib/addons";
 import { ENVIO_COBRADO } from "@/lib/checkout";
-import { RELICARIO_LLAVERO } from "@/lib/relicario-spec";
 
 type LlaveroUpsellModalProps = {
   open: boolean;
@@ -64,7 +63,7 @@ export default function LlaveroUpsellModal({
 
         <div className="relative min-h-[245px] bg-[var(--color-editorial)] editorial:min-h-[560px]">
           <Image
-            src={image ?? RELICARIO_LLAVERO.src}
+            src={image ?? "/images/relicario-llavero-editorial.png"}
             alt={image ? "Tu foto aplicada en el llavero" : "Llavero de acero inoxidable"}
             fill
             sizes="(min-width: 590px) 475px, 100vw"
