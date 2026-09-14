@@ -9,7 +9,6 @@ const steps = [
   { number: "03", title: "Lleva el recuerdo", text: "Recíbelo listo para usar o regalar." },
 ];
 
-// Contenido inicial: ajustar plazos y políticas cuando estén definidos.
 const faqs = [
   {
     question: "¿Qué tipo de foto funciona mejor?",
@@ -29,7 +28,7 @@ const faqs = [
   },
   {
     question: "¿Cuánto demora la preparación y el envío?",
-    answer: "Cada pieza se hace con tu foto. El plazo lo ves al confirmar, según comuna y envío.",
+    answer: "5 a 7 días hábiles, hecha con tu foto. El envío suma según comuna.",
   },
   {
     question: "¿Puedo llevar dos relicarios?",

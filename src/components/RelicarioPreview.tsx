@@ -754,7 +754,7 @@ export default function RelicarioPreview() {
             <div className="flex items-start justify-between gap-5 border-b border-[var(--color-border)] px-5 py-5 editorial:px-7 editorial:py-6">
               <div>
                 <p className="editorial-label text-[var(--color-accent-caption)]">
-                  Personaliza tu joya
+                  Lo importante, siempre cerca
                 </p>
                 <h2 id="photo-modal-title" className="mt-2 font-product text-[24px] leading-tight font-bold tracking-[-0.02em]">
                   {photo || preview ? "Tu relicario" : "Sube tu foto"}
@@ -764,7 +764,7 @@ export default function RelicarioPreview() {
                     ? LOADING_STAGES[loadingStage]
                     : photo
                       ? "Arrastra la foto para moverla. Usa + / − para agrandar o achicar."
-                      : "Sube una foto. La encuadramos en el corazón y después la puedes ajustar."}
+                      : "Sube una foto. La ves en el corazón y la puedes ajustar. Solo para armar tu pieza. No la publicamos."}
                 </p>
               </div>
               <button

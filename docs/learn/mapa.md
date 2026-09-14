@@ -23,7 +23,7 @@ Repo: [gpedrosad/relicario](https://github.com/gpedrosad/relicario). App: Next.j
 | Máscara / hueco | `src/lib/relicario-mask.ts` — path literales `public/relicario-llavero.png` |
 | IA | `src/lib/replicate.ts` — Bria solo para ubicar caras; cover local |
 | Funnel / eventos (PostHog) | [docs/funnel-landing.md](../funnel-landing.md) |
-| Keywords / Google Ads CL | [docs/keywords-google.md](../keywords-google.md) |
+| Ads | [docs/ads-meta.md](../ads-meta.md) — Meta. Sin Search. |
 | Costos | `src/lib/costos.ts` |
 | Pedido China | `src/lib/pedido-china.ts` — 50 piezas + extras del primer vuelo |
 | Extras / versiones | `src/lib/addons.ts` — llavero $8.990 (modal al Comprar); 2ª unidad $19.990 y pack $2.990 en `/completar`. Landing y Shopify sin extras. |

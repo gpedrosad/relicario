@@ -6,14 +6,17 @@ import {
   ADDONS,
   FEATURED_OFFER_IDS,
   LLAVERO_ADDON_ID,
+  SEGUNDA_UNIDAD_ID,
   formatClp,
   isFeaturedOffer,
   toggleAddon,
 } from "@/lib/addons";
+import { checkoutTotals } from "@/lib/checkout";
 
 export default function PedidoAddons() {
   const { tienda, setTienda } = useProjectLocal();
   const selected = tienda.selected;
+  const shippingFree = checkoutTotals(tienda).gratis;
 
   const onToggle = (id: string) => {
     setTienda((current) => ({
@@ -37,7 +40,10 @@ export default function PedidoAddons() {
         Completa tu pedido
       </h2>
       <p className="mt-3 text-sm leading-6 text-[var(--color-text-muted)]">
-        Segundo relicario a $19.990 y pack para regalo. El llavero ya se ofreció al comprar.
+        {shippingFree
+          ? "Ya va con envío gratis. Puedes sumar el segundo relicario o el pack para regalo."
+          : "El segundo relicario a $19.990 deja el envío gratis. El pack es para regalar."}{" "}
+        El llavero ya se ofreció al comprar.
       </p>
 
       <ul className="mt-6 flex flex-col gap-3">
@@ -64,7 +70,14 @@ export default function PedidoAddons() {
                   </span>
                 ) : null}
                 <span className="min-w-0 flex-1">
-                  <strong className="font-medium">{addon.name}</strong>
+                  <span className="flex flex-wrap items-center gap-2">
+                    <strong className="font-medium">{addon.name}</strong>
+                    {addon.id === SEGUNDA_UNIDAD_ID ? (
+                      <span className="bg-[var(--color-badge-bg)] px-2 py-0.5 font-display text-[10px] tracking-[0.12em] text-[var(--color-badge-text)] uppercase">
+                        Envío gratis
+                      </span>
+                    ) : null}
+                  </span>
                   <span className="mt-0.5 block text-[var(--color-text-muted)]">
                     {addon.description}
                   </span>

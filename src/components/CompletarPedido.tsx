@@ -24,7 +24,9 @@ export default function CompletarPedido() {
   return (
     <div className="min-h-screen bg-white text-black">
       <div className="bg-announcement px-4 py-2.5 text-center text-[12px] font-semibold tracking-[0.12em] text-white uppercase">
-        Envíos a todo Chile · Gratis desde $42.990
+        {totals.gratis
+          ? "Este pedido va con envío gratis"
+          : "Envíos a todo Chile · Gratis desde $42.990"}
       </div>
 
       <header className="border-b border-[var(--color-border)] bg-white">
@@ -56,6 +58,34 @@ export default function CompletarPedido() {
           <p className="mt-3 text-sm leading-6 text-[var(--color-text-muted)]">
             Esto es tuyo. El pago es el siguiente paso.
           </p>
+          <div
+            className={`mt-6 border px-4 py-4 ${
+              totals.gratis
+                ? "border-black bg-[var(--color-editorial)]"
+                : "border-[var(--color-border)] bg-[var(--color-cream)]"
+            }`}
+          >
+            <p className="editorial-label text-[var(--color-accent-caption)]">Envío</p>
+            {totals.gratis ? (
+              <>
+                <p className="mt-2 font-product text-[20px] leading-tight font-bold">
+                  Va con envío gratis
+                </p>
+                <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+                  A todo Chile. Al pagar no se cobra el courier.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="mt-2 font-product text-[20px] leading-tight font-bold">
+                  Aún no va con envío gratis
+                </p>
+                <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+                  Te faltan {formatClp(totals.falta)}. El segundo relicario lo deja gratis.
+                </p>
+              </>
+            )}
+          </div>
           <ul className="mt-6 divide-y divide-[var(--color-border)] border-y border-[var(--color-border)]">
             {lines.map((line) => (
               <li key={line.id} className="flex items-baseline justify-between gap-4 py-3 text-sm">
@@ -79,13 +109,17 @@ export default function CompletarPedido() {
             </div>
             <div className="flex justify-between">
               <dt className="text-[var(--color-text-muted)]">Envío</dt>
-              <dd>{totals.gratis ? "Gratis" : formatClp(totals.envio)}</dd>
+              <dd className={totals.gratis ? "font-semibold" : undefined}>
+                {totals.gratis ? "Gratis" : formatClp(totals.envio)}
+              </dd>
             </div>
-            {!totals.gratis ? (
+            {totals.gratis ? (
+              <p className="text-xs text-[var(--color-success)]">Este pedido va con envío gratis.</p>
+            ) : (
               <p className="text-xs text-[var(--color-text-muted)]">
                 Gratis desde {formatClp(ENVIO_GRATIS_DESDE)}. Te faltan {formatClp(totals.falta)}.
               </p>
-            ) : null}
+            )}
             <div className="mt-2 flex justify-between text-base font-semibold">
               <dt>Total</dt>
               <dd>{ready ? formatClp(totals.total) : "…"}</dd>
@@ -93,7 +127,7 @@ export default function CompletarPedido() {
           </dl>
 
           <Link href={checkoutHref(from)} className="primary-button mt-6 flex w-full items-center justify-center">
-            Ir a pagar
+            {totals.gratis ? "Ir a pagar · Envío gratis" : "Ir a pagar"}
           </Link>
           <p className="mt-3 text-center text-xs text-[var(--color-text-muted)]">
             El pago se hace en Shopify. Ahí no se pueden agregar extras.

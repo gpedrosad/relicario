@@ -4,13 +4,14 @@ Cerradas. Para reabrir hace falta un dato nuevo (número, ley, o que se rompió 
 
 | Fecha | Decisión | Por qué | No hacer |
 | --- | --- | --- | --- |
+| 2026-09-14 | Copy landing = el aviso: “Lo importante, siempre cerca.” Foto no se publica. Plazo 5–7 días hábiles | La web hablaba como catálogo; el creativo ya tenía la frase | Volver a “hecho para ti” / “joya única” ni esconder el plazo |
 | 2026-09-14 | Addons en `/completar`, no en la landing ni en Shopify. 2ª unidad $19.990 y pack $2.990 ahí. Llavero sigue en el modal de Comprar | La landing es wow + comprar. El checkout de Shopify no se puede customizar | Meter extras en `/checkout` ni volver a listarlos en el buy-box |
 | 2026-09-14 | No se vende caja suelta. El extra es el pack (caja + bolsa) | La caja sola canibaliza el pack y no es el producto | Relistar `caja-premium` en extras o checkout |
 | 2026-09-13 | Icono del carrito: modal de extras y “Quitar extras”. No cobra | El icono iba a #comprar. Los extras persisten y hace falta vaciarlos sin inventar checkout | Armar un carrito de cobro ni resetear foto o acabado |
 | 2026-09-13 | Simulador: sin Cancelar, Descargar ni Quitar. Quedan X, Elegir otra, Usar esta foto, Cambiar foto | Cancelar = la X. Descargar se lleva el wow sin pagar. Quitar lo cubre Cambiar foto | Volver a poner Descargar en el modal o bajo el hero |
 | 2026-09-13 | Landing sin “mensaje para tu pedido”. El campo queda en `MensajePedido` | El textarea no aporta al wow ni al cobro; se reengancha cuando el checkout lo use | Borrar el componente; meter la nota en extras |
 | 2026-09-13 | Empaque $500. Pack: caja $500 + bolsa $500 encima. Se vende a $2.990 | Extra $1.000 + comisión ~$173, quedan ~$1.820. $1.990 se lee barato | Meter caja/bolsa en todas las ventas, ni restar solo $500 “reemplazando” el empaque |
-| 2026-09-13 | Keywords Google Ads: [docs/keywords-google.md](../keywords-google.md). Search CL, Exact+Phrase, 30–40 KW de arranque (AG1–AG5 + AG6 light), $5–7/día. AG7 memorial off | Planner sep 2026: `relicario personalizado` es 20/mes; el volumen está en foto / guardapelo / collar. El producto es acero, no plata ni memorial | Campaña solo en “relicario personalizado”. Broad sin negativos. Pujar plata 925 / oro / cenizas |
+| 2026-09-13 | Keywords Google Ads Search — **reemplazada** el 2026-09-14 por Meta | El volumen de `relicario personalizado` era 20/mes | Reabrir Search sin dato nuevo |
 | 2026-09-13 | Envío $2.000 bajo $42.990; gratis desde $42.990. Llavero $8.990 | El relicario solo no alcanza; el llavero o ~$8.000 en extras sí. Empuja attach sin mentir “gratis siempre” | Umbral más bajo (casi cualquier extra) o gratis plano |
 | 2026-09-13 | Llavero: modal al pulsar Comprar, con la misma foto. Luego `/completar` | El attach es un paso de intención, no de landing. Envío gratis es el gancho | Ofrecerlo en galería, extras o debajo de Aplicar |
 | 2026-09-13 | Acabado dorado o plateado, mismo precio. Galería: hero + overlays | No dejar solo un color; los PNG ya existían. “Plateado” es color, no 925 | Inventar llavero dorado o decir plata de ley |

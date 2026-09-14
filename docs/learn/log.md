@@ -4,6 +4,9 @@ Más nuevo arriba. Una entrada por hecho, no un diario.
 
 ## 2026-09-14
 
+- Copy landing alineado al aviso. Foto: no se publica. Plazo: 5–7 días hábiles.
+- Pauta: Meta. Se borró `docs/keywords-google.md`. Ads → `docs/ads-meta.md`. H10 muerta.
+- H11: mix con CPA de plan $13.000 → cobro ~$41.500, utilidad ~$15.100 (sin extras ~$12.100).
 - Addons fuera de la landing y fuera de Shopify. 2ª unidad y pack se marcan en `/completar`. De ahí se va a `/checkout`. Landing: foto, acabado, comprar.
 - No se vende caja suelta. Se sacó `caja-premium` de extras. El pack es el único SKU de caja + bolsa. Pedido China: 12 cajas (mismo 20% que las bolsas), no 18.
 

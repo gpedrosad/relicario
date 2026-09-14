@@ -71,7 +71,7 @@ export default function ProductPurchase() {
         <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
           {photoReady
             ? "Ya está en el corazón. Si te gusta, cómpralo. Si no, cámbiala."
-            : "Súbela y comprueba el encuadre dentro del corazón antes de comprar."}
+            : "Súbela y comprueba el encuadre. Solo para armar tu pieza. No la publicamos."}
         </p>
         <button
           type="button"
@@ -83,7 +83,8 @@ export default function ProductPurchase() {
       </section>
 
       <p className="text-sm text-[var(--color-text-muted)]">
-        Envío {formatClp(landing.envio)} · gratis desde {formatClp(ENVIO_GRATIS_DESDE)}
+        5 a 7 días hábiles, hecha con tu foto. Envío {formatClp(landing.envio)} ·
+        gratis desde {formatClp(ENVIO_GRATIS_DESDE)}.
       </p>
 
       <div id="comprar">
